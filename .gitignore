@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local-only AI assistant notes, not published with the site
+CLAUDE.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
