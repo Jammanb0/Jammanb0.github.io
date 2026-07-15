@@ -11,19 +11,18 @@
  * - social: 원하는 만큼 추가/삭제 가능한 배열. Footer에 순서대로 표시됩니다.
  */
 export const profile = {
-  name: '홍길동',
+  name: '박건',
   role: 'Frontend Developer',
-  tagline: '사용자 경험을 고민하는\n프론트엔드 개발자입니다.',
-  bio: '빠르고 아름다운 인터페이스를 만드는 것을 좋아합니다. React와 TypeScript를 주로 사용하며, 세심한 인터랙션과 애니메이션으로 제품의 완성도를 높이는 데 관심이 많습니다.',
-  email: 'hello@example.com',
-  avatar: '',
+  tagline: '생각은 자유롭게,\n코드는 견고하게.',
+  bio: '작은 디테일과 예외 상황까지 놓치지 않는 꼼꼼함이 서비스의 완성도를 만든다고 믿습니다. 기획을 그대로 옮기는 데 그치지 않고, 논리적이고 견고한 코드로 아이디어를 사용자에게 가치 있는 결과물로 구현하는 프론트엔드 개발자입니다.',
+  email: 'parkguhn@hanmail.net',
+  avatar: '/profile_avatar.jpg',
   heroCta: {
-    label: '이메일 보내기',
-    href: 'mailto:hello@example.com',
+    label: 'GitHub',
+    href: 'https://github.com/Jammanb0',
   },
   social: [
-    { label: 'GitHub', url: 'https://github.com/your-id' },
-    { label: 'LinkedIn', url: 'https://linkedin.com/in/your-id' },
-    { label: 'Email', url: 'mailto:hello@example.com' },
+    { label: 'GitHub', url: 'https://github.com/Jammanb0' },
+    { label: 'Tistory', url: 'https://pistol-logic.tistory.com/' },
   ],
 }
