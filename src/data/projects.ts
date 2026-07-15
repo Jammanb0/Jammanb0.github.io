@@ -49,6 +49,7 @@ export const projects: Project[] = [
       { label: 'GitHub (FE)', url: 'https://github.com/DeepDirect/ddok-fe', icon: 'github' },
       { label: 'GitHub (BE)', url: 'https://github.com/DeepDirect/ddok-be', icon: 'github' },
     ],
+    thumbnail: '/project_thumbnail/DDOK!_thumbnail.png',
     youtubeId: 'tJxeeBno15E',
     date: '2025-08-01',
     endDate: '2025-09-30',
@@ -73,6 +74,7 @@ export const projects: Project[] = [
       { label: 'GitHub (FE)', url: 'https://github.com/DeepDirect/deepwebide-fe', icon: 'github' },
       { label: 'GitHub (BE)', url: 'https://github.com/DeepDirect/deepwebide-be', icon: 'github' },
     ],
+    thumbnail: '/project_thumbnail/DD_thumbnail.png',
     youtubeId: '-I3UiIWDW2s',
     date: '2025-07-01',
     endDate: '2025-08-31',
@@ -92,6 +94,7 @@ export const projects: Project[] = [
     description:
       '## 프로젝트 개요\n\n공공데이터와 교내 태양광 발전량 데이터를 활용해, 태양광 및 수소 하이브리드 에너지 시스템의 효율을 관리하고 시각화하는 지능형 가로등 EMS 웹 서비스입니다. 물리적 하드웨어 모형과 연계한 연구를 통해 캡스톤 디자인 대회 동상과 한국디지털콘텐츠학회 우수 논문상을 수상했습니다.\n\n## 담당 역할\n\n서비스 로드맵 수립과 아이디어 구체화를 포함한 프로젝트 총기획 및 연구 감독을 맡았습니다. 핵심 데이터 분석과 논리 구조 설계를 바탕으로 논문 작성을 주도했고, AI 모델 학습 방향성 수립과 데이터 소스별 학습 데이터셋 설계도 함께 진행했습니다.\n\n에너지 데이터 시각화 대시보드의 UI/UX 설계와 프론트엔드 인터페이스 구현을 담당했으며, 시연 현장의 전달력을 높이기 위해 목재와 LED 스트립 기반 물리적 하드웨어 흐름도까지 직접 제작했습니다.',
     tags: ['Data Visualization', 'HTML', 'CSS', 'JavaScript'],
+    thumbnail: '/project_thumbnail/박건 사진(그림)_밤.jpg',
     date: '2024-03-01',
     endDate: '2024-09-30',
     featured: true,
