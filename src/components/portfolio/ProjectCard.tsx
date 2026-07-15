@@ -34,7 +34,7 @@ export function ProjectCard({ project, index = 0 }: { project: Project; index?: 
       <Link to={`/projects/${project.id}`} className={card}>
         <div
           className={thumb}
-          style={project.thumbnail ? { backgroundImage: `url(${project.thumbnail})` } : undefined}
+          style={project.thumbnail ? { backgroundImage: `url("${project.thumbnail}")` } : undefined}
         >
           {!project.thumbnail && (
             <div className={thumbFallback}>{project.title.slice(0, 1)}</div>
