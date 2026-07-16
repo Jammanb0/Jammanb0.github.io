@@ -116,6 +116,7 @@ export const projects: Project[] = [
     links: [
       { label: 'GitHub', url: 'https://github.com/Jammanb0/swiftfolio-template', icon: 'github' },
     ],
+    thumbnail: '/project_thumbnail/swiftfolio-template_thumbnail.png',
     date: '2026-07-15',
     featured: true,
   },
