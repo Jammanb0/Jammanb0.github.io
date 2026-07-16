@@ -1,0 +1,1 @@
+import{r as e}from"./index-ByekP8bx.js";import{t}from"./Button-Dg6KkaKX.js";var n=`afw6g30`,r=`afw6g31`,i=`afw6g32`,a=e();function o(){return(0,a.jsxs)(`div`,{className:n,children:[(0,a.jsx)(`p`,{className:r,children:`404`}),(0,a.jsx)(`p`,{className:i,children:`페이지를 찾을 수 없습니다.`}),(0,a.jsx)(t,{to:`/`,tone:`primary`,children:`홈으로 가기`})]})}export{o as default};
