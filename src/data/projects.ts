@@ -97,6 +97,26 @@ export const projects: Project[] = [
     thumbnail: '/project_thumbnail/EMS_thumbnail.png',
     date: '2024-03-01',
     endDate: '2024-09-30',
+    featured: false,
+  },
+  {
+    id: 'swiftfolio-template',
+    title: 'Swiftfolio Template — 포트폴리오 사이트 템플릿',
+    summary: 'Toss 스타일의 React + TypeScript 포트폴리오 템플릿. 이 사이트도 이걸로 만들었습니다.',
+    role: 'Solo Developer (기획 · Claude Code와 협업 개발)',
+    highlights: [
+      'vanilla-extract 디자인 시스템, Framer Motion·GSAP 애니메이션 직접 설계',
+      '마크다운 콘텐츠 + 커스텀 유튜브 임베드 문법 등 기능 기획·구현',
+      '검색·태그·연도 필터, 다크 없는 클린 UI 등 UX 설계',
+      'v1.2.0까지 버전 관리하며 오픈소스로 공개, 지속 업데이트 중',
+    ],
+    description:
+      '## 프로젝트 개요\n\n제 개인 포트폴리오 사이트(지금 보고 계신 이 사이트)를 만들면서, 다른 사람도 재사용할 수 있도록 별도 오픈소스 템플릿으로 분리했습니다.\n\n## 담당 역할\n\nClaude Code(AI 코딩 에이전트)를 활용해 기획부터 구현, 배포까지 전 과정을 주도했습니다. 디자인 방향(Toss 스타일 UI), 기능 요구사항(마크다운 지원, 필터, 유튜브 임베드), 아키텍처 의사결정(vanilla-extract 단일 채택, Fork 기반 배포 전략)을 직접 정하고, 매 기능 단위로 브라우저에서 직접 테스트하며 반복 개선했습니다.\n\n## 기술 스택\n\nReact 19, TypeScript, Vite, vanilla-extract, Framer Motion, GSAP, react-markdown, react-router-dom\n\n## 결과\n\n`v1.2.0`까지 버전을 관리하며 공개 오픈소스 템플릿으로 유지 중입니다.',
+    tags: ['React', 'TypeScript', 'vanilla-extract', 'Framer Motion', 'GSAP', 'Claude Code'],
+    links: [
+      { label: 'GitHub', url: 'https://github.com/Jammanb0/swiftfolio-template', icon: 'github' },
+    ],
+    date: '2026-07-15',
     featured: true,
   },
 ]
