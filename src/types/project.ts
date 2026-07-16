@@ -1,7 +1,7 @@
 export interface ProjectLink {
   label: string
   url: string
-  icon?: 'github' | 'external' | 'demo'
+  icon?: 'github' | 'external' | 'demo' | 'figma' | 'notion' | 'youtube'
 }
 
 export interface Project {

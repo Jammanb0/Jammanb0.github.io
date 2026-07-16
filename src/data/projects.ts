@@ -23,7 +23,8 @@ import type { Project } from '@/types/project'
  *                thumbnail도 youtubeId도 없으면 상세 페이지에 미디어 영역 자체가
  *                생기지 않습니다 — 빈 박스가 뜨지 않습니다.
  * - tags         string[], 필수. 기술 스택. Projects 페이지 필터에도 쓰입니다.
- * - links?       { label, url, icon? }[], 선택. icon은 'github' | 'external' | 'demo'.
+ * - links?       { label, url, icon? }[], 선택. icon은 'github' | 'external' | 'demo' |
+ *                'figma' | 'notion' | 'youtube'.
  * - date         string, 필수. 'YYYY-MM-DD' 형식. 시작일이며 정렬 기준입니다.
  * - endDate?     string, 선택. 'YYYY-MM-DD'. 생략하면 "진행 중"으로 표시됩니다.
  * - featured?    boolean, 선택. true면 홈 화면 Featured 섹션에 노출됩니다. 프로젝트가
@@ -115,6 +116,11 @@ export const projects: Project[] = [
     tags: ['React', 'TypeScript', 'vanilla-extract', 'Framer Motion', 'GSAP', 'Claude Code'],
     links: [
       { label: 'GitHub', url: 'https://github.com/Jammanb0/swiftfolio-template', icon: 'github' },
+      {
+        label: 'Figma',
+        url: 'https://www.figma.com/design/RSAlSN3YEDq3Yx1E2Uatua/swiftfolio-template?node-id=1-2&t=U4ugtsIce3YJzeIE-1',
+        icon: 'figma',
+      },
     ],
     thumbnail: '/project_thumbnail/swiftfolio-template_thumbnail.png',
     date: '2026-07-15',

@@ -1,11 +1,14 @@
 import type { ProjectLink } from '@/types/project'
 import { list, linkItem, iconWrap } from './LinkList.css'
-import { GithubIcon, ExternalIcon, DemoIcon } from './icons'
+import { GithubIcon, ExternalIcon, DemoIcon, FigmaIcon, NotionIcon, YoutubeIcon } from './icons'
 
 const iconMap = {
   github: GithubIcon,
   external: ExternalIcon,
   demo: DemoIcon,
+  figma: FigmaIcon,
+  notion: NotionIcon,
+  youtube: YoutubeIcon,
 }
 
 export function LinkList({ links }: { links: ProjectLink[] }) {

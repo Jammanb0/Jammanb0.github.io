@@ -22,3 +22,32 @@ export function DemoIcon() {
     </svg>
   )
 }
+
+export function FigmaIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+      <path d="M8 1a3.5 3.5 0 1 0 0 7h3.5V1H8Z" />
+      <path d="M8 8a3.5 3.5 0 1 0 3.5 3.5V8H8Z" />
+      <path d="M8 15a3.5 3.5 0 1 0 3.5 3.5V15H8Z" />
+      <path d="M11.5 1v7H15a3.5 3.5 0 1 0 0-7h-3.5Z" />
+      <circle cx="15" cy="11.5" r="3.5" />
+    </svg>
+  )
+}
+
+export function NotionIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="16" height="16">
+      <rect x="3" y="3" width="18" height="18" rx="4" />
+      <path d="M8 16V8l8 8V8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function YoutubeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+      <path d="M22.5 6.19a2.87 2.87 0 0 0-2.02-2.03C18.68 3.7 12 3.7 12 3.7s-6.68 0-8.48.46A2.87 2.87 0 0 0 1.5 6.2 30 30 0 0 0 1 12a30 30 0 0 0 .5 5.81 2.87 2.87 0 0 0 2.02 2.03c1.8.46 8.48.46 8.48.46s6.68 0 8.48-.46a2.87 2.87 0 0 0 2.02-2.03A30 30 0 0 0 23 12a30 30 0 0 0-.5-5.81ZM9.75 15.5v-7L15.75 12l-6 3.5Z" />
+    </svg>
+  )
+}
