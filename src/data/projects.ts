@@ -170,27 +170,16 @@ export const allTags = Array.from(new Set(projects.flatMap((p) => p.tags))).sort
 )
 
 /**
- * The latest year that actually appears in the data (any project's `date`
- * or `endDate`). Used as the "still going" endpoint for projects with no
- * `endDate`, instead of the real-world current date — so the year filter
- * only ever reflects what's actually recorded in this file, not how much
- * time has passed since it was last updated.
- */
-const recordedMaxYear = Math.max(
-  ...projects.flatMap((p) => [
-    new Date(p.date).getFullYear(),
-    ...(p.endDate ? [new Date(p.endDate).getFullYear()] : []),
-  ]),
-)
-
-/**
  * Every year a project was active in, not just its start year — a project
  * that starts in one year and ends (or is still running) in a later one
- * matches the year filter for every year in between.
+ * matches the year filter for every year in between. A project with no
+ * `endDate` is still ongoing, so it runs through the current year (read at
+ * view time, in the visitor's browser — never stale even if the site
+ * itself hasn't been redeployed since).
  */
 export function getProjectYearRange(p: Project): number[] {
   const start = new Date(p.date).getFullYear()
-  const end = p.endDate ? new Date(p.endDate).getFullYear() : recordedMaxYear
+  const end = p.endDate ? new Date(p.endDate).getFullYear() : new Date().getFullYear()
   const years: number[] = []
   for (let y = start; y <= end; y++) years.push(y)
   return years
