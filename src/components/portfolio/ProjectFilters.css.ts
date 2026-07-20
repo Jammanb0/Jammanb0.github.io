@@ -69,11 +69,6 @@ export const searchInput = style({
   },
 })
 
-export const yearHint = style({
-  fontSize: vars.fontSize.caption,
-  color: vars.color.blue500,
-})
-
 export const yearDropdown = style({
   position: 'relative',
   flexShrink: 0,
@@ -88,8 +83,13 @@ export const yearDropdown = style({
 export const yearTrigger = style({
   display: 'inline-flex',
   alignItems: 'center',
+  justifyContent: 'space-between',
   gap: vars.space[2],
   height: '48px',
+  // Fixed so switching between "전체 연도" and e.g. "2026년" never changes
+  // this button's own width — otherwise the search input next to it (which
+  // grows to fill the row) visibly resizes every time the year changes.
+  minWidth: '124px',
   borderRadius: vars.radius.full,
   border: `1px solid ${vars.color.border}`,
   backgroundColor: vars.color.backgroundAlt,
@@ -109,7 +109,6 @@ export const yearTrigger = style({
     },
     'screen and (max-width: 600px)': {
       width: '100%',
-      justifyContent: 'space-between',
     },
   },
 })
@@ -133,7 +132,7 @@ export const yearMenu = style({
   position: 'absolute',
   top: 'calc(100% + 8px)',
   right: 0,
-  minWidth: '160px',
+  minWidth: '200px',
   backgroundColor: vars.color.white,
   border: `1px solid ${vars.color.border}`,
   borderRadius: vars.radius.md,
@@ -148,6 +147,18 @@ export const yearMenu = style({
       minWidth: 0,
     },
   },
+})
+
+export const yearHint = style({
+  display: 'block',
+  marginTop: vars.space[2],
+  paddingTop: vars.space[2],
+  paddingLeft: vars.space[4],
+  paddingRight: vars.space[4],
+  borderTop: `1px solid ${vars.color.border}`,
+  fontSize: vars.fontSize.caption,
+  color: vars.color.blue500,
+  lineHeight: 1.4,
 })
 
 export const yearOption = style({

@@ -104,28 +104,33 @@ function YearDropdown({
         </span>
       </button>
       {open && (
-        <ul className={yearMenu} role="listbox">
-          <li>
-            <button
-              type="button"
-              className={`${yearOption} ${selectedYear === 'all' ? yearOptionActive : ''}`}
-              onClick={() => select('all')}
-            >
-              전체 연도
-            </button>
-          </li>
-          {allYears.map((y) => (
-            <li key={y}>
+        <div className={yearMenu}>
+          <ul role="listbox">
+            <li>
               <button
                 type="button"
-                className={`${yearOption} ${selectedYear === y ? yearOptionActive : ''}`}
-                onClick={() => select(y)}
+                className={`${yearOption} ${selectedYear === 'all' ? yearOptionActive : ''}`}
+                onClick={() => select('all')}
               >
-                {y}년
+                전체 연도
               </button>
             </li>
-          ))}
-        </ul>
+            {allYears.map((y) => (
+              <li key={y}>
+                <button
+                  type="button"
+                  className={`${yearOption} ${selectedYear === y ? yearOptionActive : ''}`}
+                  onClick={() => select(y)}
+                >
+                  {y}년
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className={yearHint}>
+            연도 필터는 프로젝트가 진행 중이었던 모든 해를 기준으로 표시돼요.
+          </p>
+        </div>
       )}
     </div>
   )
@@ -164,12 +169,6 @@ export function ProjectFilters({
         </div>
         <YearDropdown allYears={allYears} selectedYear={selectedYear} onYearChange={onYearChange} />
       </div>
-
-      {selectedYear === 'all' && (
-        <span className={yearHint}>
-          연도 필터는 프로젝트가 진행 중이었던 모든 해를 기준으로 표시돼요.
-        </span>
-      )}
 
       <div className={tagRow}>
         {allTags.map((tag) => {
