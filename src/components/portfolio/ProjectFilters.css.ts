@@ -26,6 +26,15 @@ export const searchInputWrap = style({
   position: 'relative',
   flex: '1 1 280px',
   minWidth: '220px',
+
+  '@media': {
+    'screen and (max-width: 600px)': {
+      // `searchRow` switches to flex-direction: column here, which would
+      // otherwise reinterpret the 280px flex-basis above as a height.
+      flex: 'none',
+      minWidth: 0,
+    },
+  },
 })
 
 export const searchIcon = style({
