@@ -69,6 +69,11 @@ export const searchInput = style({
   },
 })
 
+export const yearHint = style({
+  fontSize: vars.fontSize.caption,
+  color: vars.color.blue500,
+})
+
 export const yearDropdown = style({
   position: 'relative',
   flexShrink: 0,

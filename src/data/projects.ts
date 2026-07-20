@@ -169,7 +169,34 @@ export const allTags = Array.from(new Set(projects.flatMap((p) => p.tags))).sort
   a.localeCompare(b),
 )
 
-/** All years that have at least one project, newest first — powers the year filter. */
+/**
+ * The latest year that actually appears in the data (any project's `date`
+ * or `endDate`). Used as the "still going" endpoint for projects with no
+ * `endDate`, instead of the real-world current date — so the year filter
+ * only ever reflects what's actually recorded in this file, not how much
+ * time has passed since it was last updated.
+ */
+const recordedMaxYear = Math.max(
+  ...projects.flatMap((p) => [
+    new Date(p.date).getFullYear(),
+    ...(p.endDate ? [new Date(p.endDate).getFullYear()] : []),
+  ]),
+)
+
+/**
+ * Every year a project was active in, not just its start year — a project
+ * that starts in one year and ends (or is still running) in a later one
+ * matches the year filter for every year in between.
+ */
+export function getProjectYearRange(p: Project): number[] {
+  const start = new Date(p.date).getFullYear()
+  const end = p.endDate ? new Date(p.endDate).getFullYear() : recordedMaxYear
+  const years: number[] = []
+  for (let y = start; y <= end; y++) years.push(y)
+  return years
+}
+
+/** All years any project was active in, newest first — powers the year filter. */
 export const allYears = Array.from(
-  new Set(projects.map((p) => new Date(p.date).getFullYear())),
+  new Set(projects.flatMap((p) => getProjectYearRange(p))),
 ).sort((a, b) => b - a)

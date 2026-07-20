@@ -13,6 +13,7 @@ import {
   yearMenu,
   yearOption,
   yearOptionActive,
+  yearHint,
   tagRow,
   tagButton,
   tagButtonActive,
@@ -163,6 +164,12 @@ export function ProjectFilters({
         </div>
         <YearDropdown allYears={allYears} selectedYear={selectedYear} onYearChange={onYearChange} />
       </div>
+
+      {selectedYear === 'all' && (
+        <span className={yearHint}>
+          연도 필터는 프로젝트가 진행 중이었던 모든 해를 기준으로 표시돼요.
+        </span>
+      )}
 
       <div className={tagRow}>
         {allTags.map((tag) => {

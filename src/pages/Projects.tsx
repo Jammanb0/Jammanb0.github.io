@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Container } from '@/components/layout/Container'
 import { ProjectCard } from '@/components/portfolio/ProjectCard'
 import { ProjectFilters, type TagMode } from '@/components/portfolio/ProjectFilters'
-import { sortedProjects, allTags, allYears } from '@/data/projects'
+import { sortedProjects, allTags, allYears, getProjectYearRange } from '@/data/projects'
 import { header, title, subtitle, grid, empty } from './Projects.css'
 
 export default function Projects() {
@@ -32,7 +32,7 @@ export default function Projects() {
           ? selectedTags.every((tag) => project.tags.includes(tag))
           : selectedTags.some((tag) => project.tags.includes(tag)))
       const matchesYear =
-        selectedYear === 'all' || new Date(project.date).getFullYear() === selectedYear
+        selectedYear === 'all' || getProjectYearRange(project).includes(selectedYear)
       return matchesQuery && matchesTags && matchesYear
     })
   }, [query, selectedTags, tagMode, selectedYear])
