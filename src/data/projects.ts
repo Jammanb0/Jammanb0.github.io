@@ -57,6 +57,11 @@ export const projects: Project[] = [
     links: [
       { label: 'GitHub (FE)', url: 'https://github.com/DeepDirect/ddok-fe', icon: 'github' },
       { label: 'GitHub (BE)', url: 'https://github.com/DeepDirect/ddok-be', icon: 'github' },
+      {
+        label: 'Notion',
+        url: 'https://married-oxygen-86f.notion.site/DDOK-246058b1ded88026acb0f89c85ddaa18?source=copy_link',
+        icon: 'notion',
+      },
     ],
     thumbnail: '/project_thumbnail/DDOK!_thumbnail.png',
     youtubeId: 'tJxeeBno15E',
@@ -90,6 +95,11 @@ export const projects: Project[] = [
     links: [
       { label: 'GitHub (FE)', url: 'https://github.com/DeepDirect/deepwebide-fe', icon: 'github' },
       { label: 'GitHub (BE)', url: 'https://github.com/DeepDirect/deepwebide-be', icon: 'github' },
+      {
+        label: 'Notion',
+        url: 'https://married-oxygen-86f.notion.site/Web-IDE-22b058b1ded880daae3bfb1604de1c28?source=copy_link',
+        icon: 'notion',
+      },
     ],
     thumbnail: '/project_thumbnail/DD_thumbnail.png',
     youtubeId: '-I3UiIWDW2s',
