@@ -13,6 +13,13 @@ export const searchRow = style({
   alignItems: 'center',
   gap: vars.space[4],
   flexWrap: 'wrap',
+
+  '@media': {
+    'screen and (max-width: 600px)': {
+      flexDirection: 'column',
+      alignItems: 'stretch',
+    },
+  },
 })
 
 export const searchInputWrap = style({
@@ -56,6 +63,12 @@ export const searchInput = style({
 export const yearDropdown = style({
   position: 'relative',
   flexShrink: 0,
+
+  '@media': {
+    'screen and (max-width: 600px)': {
+      width: '100%',
+    },
+  },
 })
 
 export const yearTrigger = style({
@@ -72,9 +85,17 @@ export const yearTrigger = style({
   color: vars.color.textPrimary,
   cursor: 'pointer',
   transition: `border-color ${vars.transition.fast}, background-color ${vars.transition.fast}`,
-  selectors: {
-    '&:hover': {
-      borderColor: vars.color.blue300,
+  '@media': {
+    '(hover: hover)': {
+      selectors: {
+        '&:hover': {
+          borderColor: vars.color.blue300,
+        },
+      },
+    },
+    'screen and (max-width: 600px)': {
+      width: '100%',
+      justifyContent: 'space-between',
     },
   },
 })
@@ -105,6 +126,14 @@ export const yearMenu = style({
   boxShadow: vars.shadow.floating,
   padding: vars.space[2],
   zIndex: 10,
+
+  '@media': {
+    'screen and (max-width: 600px)': {
+      left: 0,
+      right: 0,
+      minWidth: 0,
+    },
+  },
 })
 
 export const yearOption = style({
@@ -117,9 +146,13 @@ export const yearOption = style({
   fontWeight: vars.fontWeight.medium,
   color: vars.color.textSecondary,
   transition: `background-color ${vars.transition.fast}, color ${vars.transition.fast}`,
-  selectors: {
-    '&:hover': {
-      backgroundColor: vars.color.gray50,
+  '@media': {
+    '(hover: hover)': {
+      selectors: {
+        '&:hover': {
+          backgroundColor: vars.color.gray50,
+        },
+      },
     },
   },
 })
@@ -128,9 +161,13 @@ export const yearOptionActive = style({
   color: vars.color.blue600,
   fontWeight: vars.fontWeight.bold,
   backgroundColor: vars.color.blue50,
-  selectors: {
-    '&:hover': {
-      backgroundColor: vars.color.blue50,
+  '@media': {
+    '(hover: hover)': {
+      selectors: {
+        '&:hover': {
+          backgroundColor: vars.color.blue50,
+        },
+      },
     },
   },
 })
@@ -181,10 +218,14 @@ export const tagButton = style({
   fontSize: vars.fontSize.caption,
   fontWeight: vars.fontWeight.semibold,
   transition: `background-color ${vars.transition.fast}, border-color ${vars.transition.fast}, color ${vars.transition.fast}`,
-  selectors: {
-    '&:hover': {
-      borderColor: vars.color.blue300,
-      color: vars.color.blue600,
+  '@media': {
+    '(hover: hover)': {
+      selectors: {
+        '&:hover': {
+          borderColor: vars.color.blue300,
+          color: vars.color.blue600,
+        },
+      },
     },
   },
 })
@@ -193,9 +234,13 @@ export const tagButtonActive = style({
   backgroundColor: vars.color.blue500,
   borderColor: vars.color.blue500,
   color: vars.color.white,
-  selectors: {
-    '&:hover': {
-      color: vars.color.white,
+  '@media': {
+    '(hover: hover)': {
+      selectors: {
+        '&:hover': {
+          color: vars.color.white,
+        },
+      },
     },
   },
 })
