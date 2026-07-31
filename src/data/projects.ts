@@ -129,16 +129,17 @@ export const projects: Project[] = [
   {
     id: 'swiftfolio-template',
     title: 'Swiftfolio Template — 포트폴리오 사이트 템플릿',
-    summary: '토스 스타일의 React + TypeScript 포트폴리오 템플릿. 이 사이트도 이걸로 만들었습니다.',
+    summary:
+      '화이트 배경에 블루 포인트 컬러를 쓴 깔끔한 UI의 React + TypeScript 포트폴리오 템플릿. 이 사이트도 이걸로 만들었습니다.',
     role: 'Solo Developer (기획 · Claude Code와 협업 개발)',
     highlights: [
-      'vanilla-extract 디자인 시스템, Framer Motion·GSAP 애니메이션 직접 설계',
+      'vanilla-extract 기반 디자인 시스템, Framer Motion·GSAP 애니메이션을 Claude Code와 함께 구현',
       '마크다운 콘텐츠 + 커스텀 유튜브 임베드 문법 등 기능 기획·구현',
       '검색·태그·연도 필터, 다크 없는 클린 UI 등 UX 설계',
       'v1.3.0까지 버전 관리하며 오픈소스로 공개, 지속 업데이트 중',
     ],
     description:
-      '## 프로젝트 개요\n\n제 개인 포트폴리오 사이트(지금 보고 계신 이 사이트)를 만들면서, 다른 사람도 재사용할 수 있도록 별도 오픈소스 템플릿으로 분리했습니다.\n\n## 주요 기능\n\n- 검색 + 태그(any/all) + 연도 필터를 지원하는 프로젝트 목록\n- `description` 필드에 GitHub-flavored Markdown 지원, ` ```youtube ` 코드블록으로 영상을 본문에 임베드하는 커스텀 문법\n- vanilla-extract 디자인 토큰(색상·타이포·spacing·radius·shadow) 기반 테마 시스템\n- Framer Motion 페이지 전환·마이크로 인터랙션, GSAP 스크롤 기반 히어로 애니메이션\n- `src/data/projects.ts`에 항목 하나만 추가하면 목록·홈 Featured·상세 페이지에 모두 반영되는 구조\n\n## 개발 과정\n\nClaude Code(AI 코딩 에이전트)를 활용해 기획부터 구현, 배포까지 전 과정을 주도했습니다. 디자인 방향(토스 스타일 UI), 기능 요구사항(마크다운 지원, 필터, 유튜브 임베드), 아키텍처 의사결정(vanilla-extract 단일 채택, Fork 기반 배포 전략)을 직접 정하고, 매 기능 단위로 브라우저에서 직접 테스트하며 반복 개선했습니다.\n\n## 기술 스택\n\nReact 19, TypeScript, Vite, vanilla-extract, Framer Motion, GSAP, react-markdown, react-router-dom\n\n## 결과 & 계획\n\n`v1.3.0`까지 버전을 관리하며 공개 오픈소스 템플릿으로 유지 중입니다. 프로젝트 수가 늘어나면 지금처럼 배열 하나(`projects.ts`)로 관리하는 대신, `import.meta.glob`으로 프로젝트별 파일을 자동 인식하는 구조로 분리할 계획입니다.',
+      '## 프로젝트 개요\n\n제 개인 포트폴리오 사이트(지금 보고 계신 이 사이트)를 만들면서, 다른 사람도 재사용할 수 있도록 별도 오픈소스 템플릿으로 분리했습니다.\n\n## 주요 기능\n\n- 검색 + 태그(any/all) + 연도 필터를 지원하는 프로젝트 목록\n- `description` 필드에 GitHub-flavored Markdown 지원, ` ```youtube ` 코드블록으로 영상을 본문에 임베드하는 커스텀 문법\n- vanilla-extract 디자인 토큰(색상·타이포·spacing·radius·shadow) 기반 테마 시스템\n- Framer Motion 페이지 전환·마이크로 인터랙션, GSAP 스크롤 기반 히어로 애니메이션\n- `src/data/projects.ts`에 항목 하나만 추가하면 목록·홈 Featured·상세 페이지에 모두 반영되는 구조\n\n## 개발 과정\n\nClaude Code(AI 코딩 에이전트)를 활용해 기획부터 구현, 배포까지 전 과정을 진행했습니다. 화이트 배경에 블루 포인트 컬러를 쓴 깔끔한 UI라는 디자인 방향, 기능 요구사항(마크다운 지원, 필터, 유튜브 임베드), Fork 기반 배포 전략(포크 수를 눈에 보이는 지표로 남기기 위함)은 직접 정했습니다. 이를 구현할 구체적인 기술 스택과 아키텍처(vanilla-extract 단일 채택 등)는 Claude Code가 정하고 구현했고, 매 기능 단위로 브라우저에서 직접 테스트하며 반복 개선했습니다.\n\n## 트러블슈팅: 정적 호스팅 제약과 범용성\n\n**문제**: GitHub Pages(정적 호스팅)에 올린다는 전제가 있어 백엔드 연동이 원천적으로 불가능하고, 정적 데이터만으로 모든 기능을 구현해야 했습니다. 여기에 더해 나 혼자 쓰는 게 아니라 누구나 포크해서 자기 정보로 바꿔 쓸 수 있도록 범용적으로 설계해야 한다는 제약도 함께 있었습니다.\n\n**접근**: 서버 없이 동작하도록 프로젝트·프로필 데이터를 `src/data/*.ts` 정적 파일로 관리하는 구조로 설계하고, 검색·태그·연도 필터 같은 기능도 전부 클라이언트 사이드 로직으로 구현했습니다. 다른 사람이 그대로 포크해서 바로 커스터마이징할 수 있도록 데이터 필드마다 사용법 주석을 남기고, README에 별도 가이드를 작성했습니다.\n\n**결과**: 백엔드 없이도 검색·필터·마크다운 콘텐츠·유튜브 임베드 등 필요한 기능을 정적 사이트 안에서 모두 구현했고, 실제로 포크해서 바로 커스터마이징할 수 있는 구조를 갖췄습니다.\n\n**배운 점**: 나 혼자 쓸 도구가 아니라 남도 쓸 도구를 만들 때는, 기능 구현 자체보다 "다른 사람이 봤을 때 바로 이해하고 고칠 수 있는가"에 훨씬 더 많은 시간이 든다는 걸 체감했습니다. 실제로 이 부분에 가장 많은 시간을 썼습니다.\n\n## 기술 스택\n\n- **vanilla-extract**: 스타일링 솔루션을 하나로 통일해 유지보수 부담을 줄이고, zero-runtime이라 성능과 타입 안전성을 함께 챙길 수 있어 채택했습니다.\n- **Framer Motion**: 페이지 전환 애니메이션, 버튼·카드의 hover/tap 같은 컴포넌트 단위 마이크로 인터랙션에 사용했습니다.\n- **GSAP + ScrollTrigger**: Framer Motion의 선언적 variants만으로는 표현하기 어려운, 스크롤 연동 히어로 인트로 같은 복잡한 타임라인 애니메이션에 사용했습니다.\n- **react-markdown + remark-gfm**: 프로젝트 설명을 마크다운으로 작성할 수 있게 하고, 코드블록 문법을 재활용해 새 의존성 추가 없이 유튜브 영상을 본문에 임베드하는 커스텀 문법을 구현했습니다.\n- **react-router-dom**: 클라이언트 사이드 라우팅. 무거운 마크다운 렌더러는 상세 페이지(`/projects/:id`)에서만 로드되도록 라우트 단위로 지연 로딩했습니다.\n\n## 결과 & 계획\n\n`v1.3.0`까지 버전을 관리하며 공개 오픈소스 템플릿으로 유지 중입니다. 프로젝트 수가 늘어나면 지금처럼 배열 하나(`projects.ts`)로 관리하는 대신, `import.meta.glob`으로 프로젝트별 파일을 자동 인식하는 구조로 분리할 계획입니다.',
     tags: ['React', 'TypeScript', 'vanilla-extract', 'Framer Motion', 'GSAP', 'Claude Code'],
     links: [
       { label: 'GitHub', url: 'https://github.com/Jammanb0/swiftfolio-template', icon: 'github' },
