@@ -7,6 +7,11 @@
 
 ## 개발
 
+### 요구 사항
+
+- Node.js `^20.19.0` 또는 `>=22.12.0` (Node 22 LTS 권장)
+- npm `10` 이상 권장
+
 ```bash
 npm install
 npm run dev
