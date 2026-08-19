@@ -80,7 +80,10 @@ export const yearDropdown = style({
 })
 
 export const yearTrigger = style({
-  display: 'block',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: vars.space[2],
   height: '48px',
   // Fixed so switching between "전체 연도" and e.g. "2026년" never changes
   // this button's own width — otherwise the search input next to it (which
@@ -89,14 +92,19 @@ export const yearTrigger = style({
   borderRadius: vars.radius.full,
   border: `1px solid ${vars.color.border}`,
   backgroundColor: vars.color.backgroundAlt,
-  padding: `0 ${vars.space[10]} 0 ${vars.space[5]}`,
+  padding: `0 ${vars.space[4]} 0 ${vars.space[5]}`,
   fontSize: vars.fontSize.small,
   fontWeight: vars.fontWeight.semibold,
   color: vars.color.textPrimary,
   cursor: 'pointer',
-  appearance: 'none',
-  WebkitAppearance: 'none',
   transition: `border-color ${vars.transition.fast}, background-color ${vars.transition.fast}`,
+  selectors: {
+    '&:focus-visible': {
+      outline: 'none',
+      boxShadow: `0 0 0 3px ${vars.color.blue100}`,
+      borderColor: vars.color.blue300,
+    },
+  },
   '@media': {
     '(hover: hover)': {
       selectors: {
@@ -111,26 +119,100 @@ export const yearTrigger = style({
   },
 })
 
+export const yearTriggerOpen = style({
+  borderColor: vars.color.blue300,
+  backgroundColor: vars.color.white,
+})
+
 export const yearChevron = style({
   display: 'inline-flex',
-  position: 'absolute',
-  right: vars.space[4],
-  top: '50%',
-  transform: 'translateY(-50%)',
   color: vars.color.textTertiary,
+  transition: `transform ${vars.transition.fast}`,
   pointerEvents: 'none',
 })
 
-export const visuallyHidden = style({
+export const yearChevronOpen = style({
+  transform: 'rotate(180deg)',
+})
+
+export const yearMenu = style({
   position: 'absolute',
-  width: '1px',
-  height: '1px',
-  padding: 0,
-  margin: '-1px',
-  overflow: 'hidden',
-  clip: 'rect(0, 0, 0, 0)',
-  whiteSpace: 'nowrap',
-  border: 0,
+  top: 'calc(100% + 8px)',
+  right: 0,
+  minWidth: '200px',
+  backgroundColor: vars.color.white,
+  border: `1px solid ${vars.color.border}`,
+  borderRadius: vars.radius.md,
+  boxShadow: vars.shadow.floating,
+  padding: vars.space[2],
+  zIndex: 10,
+
+  '@media': {
+    'screen and (max-width: 600px)': {
+      left: 0,
+      right: 0,
+      minWidth: 0,
+    },
+  },
+})
+
+export const yearOptions = style({
+  display: 'flex',
+  flexDirection: 'column',
+})
+
+export const yearOption = style({
+  display: 'block',
+  width: '100%',
+  textAlign: 'left',
+  padding: `${vars.space[3]} ${vars.space[4]}`,
+  borderRadius: vars.radius.sm,
+  fontSize: vars.fontSize.small,
+  fontWeight: vars.fontWeight.medium,
+  color: vars.color.textSecondary,
+  transition: `background-color ${vars.transition.fast}, color ${vars.transition.fast}`,
+  selectors: {
+    '&:focus-visible': {
+      outline: 'none',
+      backgroundColor: vars.color.gray50,
+      boxShadow: `inset 0 0 0 2px ${vars.color.blue300}`,
+    },
+  },
+  '@media': {
+    '(hover: hover)': {
+      selectors: {
+        '&:hover': {
+          backgroundColor: vars.color.gray50,
+        },
+      },
+    },
+  },
+})
+
+export const yearOptionActive = style({
+  color: vars.color.blue600,
+  fontWeight: vars.fontWeight.bold,
+  backgroundColor: vars.color.blue50,
+  '@media': {
+    '(hover: hover)': {
+      selectors: {
+        '&:hover': {
+          backgroundColor: vars.color.blue50,
+        },
+      },
+    },
+  },
+})
+
+export const yearHint = style({
+  marginTop: vars.space[2],
+  paddingTop: vars.space[2],
+  paddingLeft: vars.space[4],
+  paddingRight: vars.space[4],
+  borderTop: `1px solid ${vars.color.border}`,
+  fontSize: vars.fontSize.caption,
+  color: vars.color.blue500,
+  lineHeight: 1.4,
 })
 
 export const tagModeRow = style({

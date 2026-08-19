@@ -1,3 +1,4 @@
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import {
   wrapper,
   searchRow,
@@ -6,8 +7,14 @@ import {
   searchInput,
   yearDropdown,
   yearTrigger,
+  yearTriggerOpen,
   yearChevron,
-  visuallyHidden,
+  yearChevronOpen,
+  yearMenu,
+  yearOptions,
+  yearOption,
+  yearOptionActive,
+  yearHint,
   tagRow,
   tagButton,
   tagButtonActive,
@@ -80,31 +87,154 @@ function YearDropdown({
   selectedYear: number | 'all'
   onYearChange: (year: number | 'all') => void
 }) {
+  const [open, setOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const menuId = useId()
+  const hintId = useId()
+  const options: Array<{ value: number | 'all'; label: string }> = [
+    { value: 'all', label: '전체 연도' },
+    ...allYears.map((year) => ({ value: year, label: `${year}년` })),
+  ]
+  const selectedIndex = Math.max(
+    0,
+    options.findIndex((option) => option.value === selectedYear),
+  )
+  const selectedLabel = options[selectedIndex].label
+
+  useEffect(() => {
+    if (!open) return
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [open])
+
+  useEffect(() => {
+    if (open) optionRefs.current[activeIndex]?.focus()
+  }, [activeIndex, open])
+
+  const openMenu = (index = selectedIndex) => {
+    setActiveIndex(index)
+    setOpen(true)
+  }
+
+  const closeMenu = (restoreFocus = false) => {
+    setOpen(false)
+    if (restoreFocus) triggerRef.current?.focus()
+  }
+
+  const selectOption = (value: number | 'all') => {
+    onYearChange(value)
+    closeMenu(true)
+  }
+
+  const moveFocus = (index: number) => {
+    const nextIndex = (index + options.length) % options.length
+    setActiveIndex(nextIndex)
+  }
+
+  const handleOptionKeyDown = (event: KeyboardEvent, index: number) => {
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault()
+        moveFocus(index + 1)
+        break
+      case 'ArrowUp':
+        event.preventDefault()
+        moveFocus(index - 1)
+        break
+      case 'Home':
+        event.preventDefault()
+        moveFocus(0)
+        break
+      case 'End':
+        event.preventDefault()
+        moveFocus(options.length - 1)
+        break
+      case 'Enter':
+      case ' ':
+        event.preventDefault()
+        selectOption(options[index].value)
+        break
+      case 'Escape':
+        event.preventDefault()
+        closeMenu(true)
+        break
+      case 'Tab':
+        setOpen(false)
+        break
+    }
+  }
+
   return (
-    <div className={yearDropdown}>
-      <select
-        className={yearTrigger}
-        value={selectedYear}
-        onChange={(event) => {
-          const value = event.target.value
-          onYearChange(value === 'all' ? 'all' : Number(value))
+    <div className={yearDropdown} ref={rootRef}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className={`${yearTrigger} ${open ? yearTriggerOpen : ''}`}
+        aria-label={`프로젝트 연도 필터: ${selectedLabel}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => {
+          if (open) closeMenu()
+          else openMenu()
         }}
-        aria-label="프로젝트 연도 필터"
-        aria-describedby="project-year-filter-hint"
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault()
+            openMenu()
+          }
+        }}
       >
-        <option value="all">전체 연도</option>
-        {allYears.map((year) => (
-          <option key={year} value={year}>
-            {year}년
-          </option>
-        ))}
-      </select>
-      <span className={yearChevron}>
-        <ChevronIcon />
-      </span>
-      <span id="project-year-filter-hint" className={visuallyHidden}>
-        프로젝트가 진행 중이었던 모든 해를 기준으로 필터링합니다.
-      </span>
+        <span>{selectedLabel}</span>
+        <span className={`${yearChevron} ${open ? yearChevronOpen : ''}`}>
+          <ChevronIcon />
+        </span>
+      </button>
+
+      {open && (
+        <div className={yearMenu}>
+          <div
+            id={menuId}
+            className={yearOptions}
+            role="listbox"
+            aria-label="프로젝트 연도"
+            aria-describedby={hintId}
+          >
+            {options.map((option, index) => {
+              const selected = option.value === selectedYear
+              return (
+                <button
+                  key={option.value}
+                  ref={(element) => {
+                    optionRefs.current[index] = element
+                  }}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  tabIndex={index === activeIndex ? 0 : -1}
+                  className={`${yearOption} ${selected ? yearOptionActive : ''}`}
+                  onFocus={() => setActiveIndex(index)}
+                  onClick={() => selectOption(option.value)}
+                  onKeyDown={(event) => handleOptionKeyDown(event, index)}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
+          </div>
+          <p id={hintId} className={yearHint}>
+            프로젝트가 진행 중이었던 모든 해를 기준으로 표시해요.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
