@@ -21,7 +21,7 @@ export function LinkList({ links }: { links: ProjectLink[] }) {
         return (
           <li key={link.url}>
             <a href={link.url} target="_blank" rel="noreferrer" className={linkItem}>
-              <span className={iconWrap}>
+              <span className={iconWrap} aria-hidden="true">
                 <Icon />
               </span>
               {link.label}

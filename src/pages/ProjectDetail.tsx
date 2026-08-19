@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/layout/Container'
 import { Tag } from '@/components/ui/Tag'
 import { YoutubeEmbed } from '@/components/portfolio/YoutubeEmbed'
@@ -25,6 +25,7 @@ import {
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
+  const shouldReduceMotion = useReducedMotion()
   const project = id ? getProjectById(id) : undefined
 
   if (!project) {
@@ -35,9 +36,11 @@ export default function ProjectDetail() {
     <Container>
       <motion.div
         className={wrapper}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+        animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+        transition={
+          shouldReduceMotion ? { duration: 0 } : { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
+        }
       >
         <Link className={back} to="/projects">
           ← 프로젝트 목록으로

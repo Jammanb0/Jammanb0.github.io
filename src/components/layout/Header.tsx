@@ -12,10 +12,10 @@ export function Header() {
     <header className={header}>
       <div className={inner}>
         <NavLink to="/" className={logo}>
-          {profile.avatar && <img className={avatar} src={profile.avatar} alt={profile.name} />}
+          {profile.avatar && <img className={avatar} src={profile.avatar} alt="" />}
           {profile.name}
         </NavLink>
-        <nav className={nav}>
+        <nav className={nav} aria-label="주요 메뉴">
           {links.map((l) => (
             <NavLink
               key={l.to}

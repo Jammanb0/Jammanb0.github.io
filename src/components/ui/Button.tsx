@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { button, type ButtonVariants } from './Button.css'
 
@@ -32,12 +32,17 @@ type ButtonProps = ButtonAsButton | ButtonAsAnchor | ButtonAsLink
 const MotionLink = motion.create(Link)
 
 export function Button(props: ButtonProps) {
+  const shouldReduceMotion = useReducedMotion()
   const { children, icon, tone, size } = props
   const className = button({ tone, size })
 
   if ('to' in props && props.to) {
     return (
-      <MotionLink to={props.to} className={className} whileTap={{ scale: 0.97 }}>
+      <MotionLink
+        to={props.to}
+        className={className}
+        whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+      >
         {icon}
         {children}
       </MotionLink>
@@ -51,7 +56,7 @@ export function Button(props: ButtonProps) {
         target={props.target}
         rel={props.rel}
         className={className}
-        whileTap={{ scale: 0.97 }}
+        whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
       >
         {icon}
         {children}
@@ -61,7 +66,12 @@ export function Button(props: ButtonProps) {
 
   const { onClick, type = 'button' } = props as ButtonAsButton
   return (
-    <motion.button type={type} onClick={onClick} className={className} whileTap={{ scale: 0.97 }}>
+    <motion.button
+      type={type}
+      onClick={onClick}
+      className={className}
+      whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+    >
       {icon}
       {children}
     </motion.button>

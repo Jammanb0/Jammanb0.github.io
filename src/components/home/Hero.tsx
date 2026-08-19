@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useReducedMotion } from 'framer-motion'
 import { gsap } from '@/lib/gsap'
 import { Button } from '@/components/ui/Button'
 import { Container } from '@/components/layout/Container'
@@ -17,8 +18,11 @@ import {
 
 export function Hero() {
   const rootRef = useRef<HTMLDivElement>(null)
+  const shouldReduceMotion = useReducedMotion()
 
   useEffect(() => {
+    if (shouldReduceMotion) return
+
     const ctx = gsap.context((self) => {
       const lines = self.selector?.('[data-hero-line]')
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
@@ -35,7 +39,7 @@ export function Hero() {
     }, rootRef)
 
     return () => ctx.revert()
-  }, [])
+  }, [shouldReduceMotion])
 
   const lines = profile.tagline.split('\n')
   const isExternalCta = profile.heroCta.href.startsWith('http')

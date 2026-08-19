@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react'
 import {
   wrapper,
   searchRow,
@@ -7,13 +6,8 @@ import {
   searchInput,
   yearDropdown,
   yearTrigger,
-  yearTriggerOpen,
   yearChevron,
-  yearChevronOpen,
-  yearMenu,
-  yearOption,
-  yearOptionActive,
-  yearHint,
+  visuallyHidden,
   tagRow,
   tagButton,
   tagButtonActive,
@@ -44,7 +38,16 @@ interface ProjectFiltersProps {
 
 function SearchIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      width="18"
+      height="18"
+      aria-hidden="true"
+      focusable="false"
+    >
       <circle cx="11" cy="11" r="7" />
       <path d="m20 20-3.5-3.5" strokeLinecap="round" />
     </svg>
@@ -53,7 +56,16 @@ function SearchIcon() {
 
 function ChevronIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      focusable="false"
+    >
       <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
@@ -68,70 +80,31 @@ function YearDropdown({
   selectedYear: number | 'all'
   onYearChange: (year: number | 'all') => void
 }) {
-  const [open, setOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    function handleClickOutside(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
-
-  const label = selectedYear === 'all' ? '전체 연도' : `${selectedYear}년`
-
-  const select = (year: number | 'all') => {
-    onYearChange(year)
-    setOpen(false)
-  }
-
   return (
-    <div className={yearDropdown} ref={rootRef}>
-      <button
-        type="button"
-        className={`${yearTrigger} ${open ? yearTriggerOpen : ''}`}
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
+    <div className={yearDropdown}>
+      <select
+        className={yearTrigger}
+        value={selectedYear}
+        onChange={(event) => {
+          const value = event.target.value
+          onYearChange(value === 'all' ? 'all' : Number(value))
+        }}
+        aria-label="프로젝트 연도 필터"
+        aria-describedby="project-year-filter-hint"
       >
-        <span>{label}</span>
-        <span className={`${yearChevron} ${open ? yearChevronOpen : ''}`}>
-          <ChevronIcon />
-        </span>
-      </button>
-      {open && (
-        <div className={yearMenu}>
-          <ul role="listbox">
-            <li>
-              <button
-                type="button"
-                className={`${yearOption} ${selectedYear === 'all' ? yearOptionActive : ''}`}
-                onClick={() => select('all')}
-              >
-                전체 연도
-              </button>
-            </li>
-            {allYears.map((y) => (
-              <li key={y}>
-                <button
-                  type="button"
-                  className={`${yearOption} ${selectedYear === y ? yearOptionActive : ''}`}
-                  onClick={() => select(y)}
-                >
-                  {y}년
-                </button>
-              </li>
-            ))}
-          </ul>
-          <p className={yearHint}>
-            연도 필터는 프로젝트가 진행 중이었던 모든 해를 기준으로 표시돼요.
-          </p>
-        </div>
-      )}
+        <option value="all">전체 연도</option>
+        {allYears.map((year) => (
+          <option key={year} value={year}>
+            {year}년
+          </option>
+        ))}
+      </select>
+      <span className={yearChevron}>
+        <ChevronIcon />
+      </span>
+      <span id="project-year-filter-hint" className={visuallyHidden}>
+        프로젝트가 진행 중이었던 모든 해를 기준으로 필터링합니다.
+      </span>
     </div>
   )
 }
@@ -163,6 +136,7 @@ export function ProjectFilters({
             className={searchInput}
             type="text"
             placeholder="프로젝트 이름으로 검색"
+            aria-label="프로젝트 검색"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
           />
@@ -170,7 +144,7 @@ export function ProjectFilters({
         <YearDropdown allYears={allYears} selectedYear={selectedYear} onYearChange={onYearChange} />
       </div>
 
-      <div className={tagRow}>
+      <div className={tagRow} role="group" aria-label="프로젝트 태그 필터">
         {allTags.map((tag) => {
           const active = selectedTags.includes(tag)
           return (
@@ -188,7 +162,7 @@ export function ProjectFilters({
       </div>
 
       {selectedTags.length > 1 && (
-        <div className={tagModeRow}>
+        <div className={tagModeRow} role="group" aria-label="태그 필터 조합 방식">
           <span className={tagModeLabel}>선택한 태그가 여러 개일 때</span>
           <button
             type="button"
@@ -210,7 +184,7 @@ export function ProjectFilters({
       )}
 
       <div className={resultRow}>
-        <span>{resultCount}개의 프로젝트</span>
+        <span aria-live="polite">{resultCount}개의 프로젝트</span>
         {hasActiveFilters && (
           <button type="button" className={clearButton} onClick={onClear}>
             필터 초기화

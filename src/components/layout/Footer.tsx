@@ -9,13 +9,13 @@ export function Footer() {
         <p className={copyright}>
           © {year} {profile.name}. All rights reserved.
         </p>
-        <div className={socialRow}>
+        <nav className={socialRow} aria-label="소셜 링크">
           {profile.social.map((s) => (
             <a key={s.label} href={s.url} target="_blank" rel="noreferrer" className={socialLink}>
               {s.label}
             </a>
           ))}
-        </div>
+        </nav>
       </div>
     </footer>
   )

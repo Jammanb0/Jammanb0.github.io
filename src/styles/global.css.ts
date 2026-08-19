@@ -40,6 +40,11 @@ globalStyle('button', {
   padding: 0,
 })
 
+globalStyle('a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible', {
+  outline: `3px solid ${vars.color.blue300}`,
+  outlineOffset: '3px',
+})
+
 globalStyle('ul, ol', {
   margin: 0,
   padding: 0,
@@ -58,4 +63,15 @@ globalStyle('img', {
 globalStyle('::selection', {
   backgroundColor: vars.color.blue100,
   color: vars.color.blue700,
+})
+
+globalStyle('*, *::before, *::after', {
+  '@media': {
+    '(prefers-reduced-motion: reduce)': {
+      animationDuration: '0.01ms',
+      animationIterationCount: '1',
+      scrollBehavior: 'auto',
+      transitionDuration: '0.01ms',
+    },
+  },
 })
