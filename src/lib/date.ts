@@ -1,6 +1,11 @@
 function formatMonth(iso: string) {
-  const d = new Date(iso)
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`
+  const [year, month] = iso.split('-')
+  return `${year}.${month}`
+}
+
+/** Reads the year without parsing the ISO date as UTC, avoiding timezone shifts. */
+export function getYear(iso: string) {
+  return Number(iso.slice(0, 4))
 }
 
 /** e.g. '2026.03 - 진행 중' or '2025.11 - 2026.03' */

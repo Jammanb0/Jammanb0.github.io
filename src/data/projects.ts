@@ -1,4 +1,5 @@
 import type { Project } from '@/types/project'
+import { getYear } from '@/lib/date'
 
 /**
  * Add your own projects here — just append a new object to this array.
@@ -155,9 +156,7 @@ export const projects: Project[] = [
   },
 ]
 
-export const sortedProjects = [...projects].sort(
-  (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-)
+export const sortedProjects = [...projects].sort((a, b) => b.date.localeCompare(a.date))
 
 export const featuredProjects = sortedProjects.filter((p) => p.featured)
 
@@ -179,14 +178,14 @@ export const allTags = Array.from(new Set(projects.flatMap((p) => p.tags))).sort
  * itself hasn't been redeployed since).
  */
 export function getProjectYearRange(p: Project): number[] {
-  const start = new Date(p.date).getFullYear()
-  const end = p.endDate ? new Date(p.endDate).getFullYear() : new Date().getFullYear()
+  const start = getYear(p.date)
+  const end = p.endDate ? getYear(p.endDate) : new Date().getFullYear()
   const years: number[] = []
   for (let y = start; y <= end; y++) years.push(y)
   return years
 }
 
 /** All years any project was active in, newest first — powers the year filter. */
-export const allYears = Array.from(
-  new Set(projects.flatMap((p) => getProjectYearRange(p))),
-).sort((a, b) => b - a)
+export const allYears = Array.from(new Set(projects.flatMap((p) => getProjectYearRange(p)))).sort(
+  (a, b) => b - a,
+)
