@@ -42,6 +42,13 @@ export const grid = style({
   },
 })
 
+export const empty = style({
+  padding: `${vars.space[16]} 0`,
+  textAlign: 'center',
+  color: vars.color.textTertiary,
+  fontSize: vars.fontSize.bodyLg,
+})
+
 export const ctaSection = style({
   padding: `${vars.space[24]} 0`,
   textAlign: 'center',

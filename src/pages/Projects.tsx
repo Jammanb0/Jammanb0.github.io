@@ -6,6 +6,7 @@ import { sortedProjects, allTags, allYears, getProjectYearRange } from '@/data/p
 import { header, title, subtitle, grid, empty } from './Projects.css'
 
 export default function Projects() {
+  const hasProjects = sortedProjects.length > 0
   const [query, setQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [tagMode, setTagMode] = useState<TagMode>('any')
@@ -44,22 +45,26 @@ export default function Projects() {
         <p className={subtitle}>지금까지 진행한 프로젝트 {sortedProjects.length}개입니다.</p>
       </header>
 
-      <ProjectFilters
-        query={query}
-        onQueryChange={setQuery}
-        allTags={allTags}
-        selectedTags={selectedTags}
-        onToggleTag={toggleTag}
-        tagMode={tagMode}
-        onTagModeChange={setTagMode}
-        allYears={allYears}
-        selectedYear={selectedYear}
-        onYearChange={setSelectedYear}
-        resultCount={filteredProjects.length}
-        onClear={clearFilters}
-      />
+      {hasProjects && (
+        <ProjectFilters
+          query={query}
+          onQueryChange={setQuery}
+          allTags={allTags}
+          selectedTags={selectedTags}
+          onToggleTag={toggleTag}
+          tagMode={tagMode}
+          onTagModeChange={setTagMode}
+          allYears={allYears}
+          selectedYear={selectedYear}
+          onYearChange={setSelectedYear}
+          resultCount={filteredProjects.length}
+          onClear={clearFilters}
+        />
+      )}
 
-      {filteredProjects.length > 0 ? (
+      {!hasProjects ? (
+        <p className={empty}>아직 등록된 프로젝트가 없습니다.</p>
+      ) : filteredProjects.length > 0 ? (
         <div className={grid}>
           {filteredProjects.map((project, i) => (
             <ProjectCard key={project.id} project={project} index={i} />
