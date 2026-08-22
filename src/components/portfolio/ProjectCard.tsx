@@ -19,6 +19,7 @@ import {
 // still shown on the detail page, and the tag filter always matches against
 // project.tags in full — this only affects what's visible on the card.
 const MAX_VISIBLE_TAGS = 4
+const MotionLink = motion.create(Link)
 
 export function ProjectCard({ project, index = 0 }: { project: Project; index?: number }) {
   const shouldReduceMotion = useReducedMotion()
@@ -38,9 +39,15 @@ export function ProjectCard({ project, index = 0 }: { project: Project; index?: 
               ease: [0.16, 1, 0.3, 1],
             }
       }
-      whileHover={shouldReduceMotion ? undefined : { y: -6 }}
     >
-      <Link to={`/projects/${project.id}`} className={card}>
+      <MotionLink
+        to={`/projects/${project.id}`}
+        className={card}
+        whileHover={shouldReduceMotion ? undefined : { y: -6 }}
+        transition={
+          shouldReduceMotion ? { duration: 0 } : { duration: 0.15, ease: [0.4, 0, 0.2, 1] }
+        }
+      >
         <div
           className={thumb}
           style={project.thumbnail ? { backgroundImage: `url("${project.thumbnail}")` } : undefined}
@@ -61,7 +68,7 @@ export function ProjectCard({ project, index = 0 }: { project: Project; index?: 
             {hiddenCount > 0 && <span className={moreTag}>+{hiddenCount}</span>}
           </div>
         </div>
-      </Link>
+      </MotionLink>
     </motion.div>
   )
 }

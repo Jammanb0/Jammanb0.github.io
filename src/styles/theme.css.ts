@@ -79,7 +79,7 @@ export const vars = createGlobalTheme(':root', {
   },
   shadow: {
     card: '0 2px 8px rgba(15, 23, 42, 0.04)',
-    cardHover: '0 12px 32px rgba(15, 23, 42, 0.10)',
+    cardHover: '0 12px 32px rgba(49, 130, 246, 0.09), 0 2px 8px rgba(15, 23, 42, 0.04)',
     floating: '0 16px 48px rgba(15, 23, 42, 0.14)',
   },
   transition: {

@@ -8,6 +8,17 @@ export const card = style({
   boxShadow: vars.shadow.card,
   overflow: 'hidden',
   height: '100%',
+  transition: `box-shadow ${vars.transition.fast}`,
+
+  '@media': {
+    '(hover: hover)': {
+      selectors: {
+        '&:hover': {
+          boxShadow: vars.shadow.cardHover,
+        },
+      },
+    },
+  },
 })
 
 export const thumb = style({
