@@ -1,7 +1,7 @@
 # 박건 — GitHub Pages
 
 프론트엔드 개발자 박건의 개인 포트폴리오 사이트입니다.
-[swiftfolio-template](https://github.com/Jammanb0/swiftfolio-template) (v1.1.0 기반)으로 만들었습니다.
+[swiftfolio-template](https://github.com/Jammanb0/swiftfolio-template)을 기반으로 만들었고, 공통 기능 개선을 주기적으로 동기화합니다.
 
 🔗 [jammanb0.github.io](https://jammanb0.github.io)
 
@@ -24,10 +24,16 @@ npm run dev
 
 필드별 자세한 설명과 마크다운/유튜브 임베드 사용법은 [템플릿 레포 README](https://github.com/Jammanb0/swiftfolio-template#readme)를 참고하세요.
 
-## 배포
+## 자동 배포
+
+`.github/workflows/deploy-pages.yml`이 `main`에 push될 때 린트, 설정된 테스트, 프로덕션 빌드를 확인한 뒤 GitHub Pages에 자동 배포합니다.
+
+최초 한 번 GitHub 저장소의 **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 선택해야 합니다. 이후에는 다음처럼 소스를 push하는 것만으로 사이트까지 반영됩니다.
 
 ```bash
-npm run deploy
+git add .
+git commit -m "..."
+git push origin main
 ```
 
-`gh-pages` 패키지가 빌드 결과를 `gh-pages` 브랜치로 push합니다. 레포 Settings → Pages에서 Source를 `gh-pages` 브랜치로 지정하면 반영됩니다 (최초 1회만).
+배포 진행 상황은 저장소의 **Actions → Deploy to GitHub Pages**에서 확인할 수 있습니다. 기존 `npm run deploy` 명령은 이전 `gh-pages` 수동 배포 방식으로 되돌려야 할 때를 위한 호환 경로로만 유지합니다.
