@@ -12,10 +12,11 @@ dist
 dist-ssr
 *.local
 
-# Local-only AI assistant notes, not published with the site
+# Local-only AI assistant instructions, not committed to the repository
 CLAUDE.md
 AGENTS.md
 .claude/
+.agents/
 
 # Editor directories and files
 .vscode/*
