@@ -91,7 +91,7 @@ export const projects: Project[] = [
     youtubeId: 'I-4zQVorNwk',
     date: '2026-10-09',
     endDate: '2026-10-10',
-    featured: false,
+    featured: true,
   },
   {
     id: 'doltap',
@@ -296,7 +296,7 @@ AI가 생성한 결과를 그럴듯해 보인다는 이유만으로 통과시키
     youtubeId: 'tJxeeBno15E',
     date: '2025-08-01',
     endDate: '2025-09-30',
-    featured: true,
+    featured: false,
   },
   {
     id: 'deepwebide',
