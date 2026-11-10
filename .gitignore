@@ -18,6 +18,9 @@ AGENTS.md
 .claude/
 .agents/
 
+# Local-only development notes (README.md is for visitors)
+DEVELOPMENT.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

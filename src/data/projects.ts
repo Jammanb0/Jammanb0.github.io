@@ -6,7 +6,7 @@ import { getYear } from '@/lib/date'
  * Nothing else in the app needs to change: the list, detail page, and
  * routing all pick up new entries automatically.
  *
- * Field-by-field guide (전체 설명은 README.md의 "프로젝트 추가하기" 참고):
+ * Field-by-field guide:
  * - id           string, 필수. URL에 쓰입니다 (/projects/이-값). 영문/숫자/하이픈 권장.
  * - title        string, 필수. 프로젝트 이름.
  * - summary      string, 필수. 카드에 보이는 한 줄 요약.
