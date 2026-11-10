@@ -1,59 +1,45 @@
-import { Link } from 'react-router-dom'
-import { Hero } from '@/components/home/Hero'
-import { Container } from '@/components/layout/Container'
-import { ProjectCard } from '@/components/portfolio/ProjectCard'
-import { Button } from '@/components/ui/Button'
-import { featuredProjects, sortedProjects } from '@/data/projects'
-import {
-  section,
-  sectionHead,
-  sectionTitle,
-  sectionLink,
-  grid,
-  empty,
-  ctaSection,
-  ctaTitle,
-} from './Home.css'
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import { CommitRail } from '@/build/CommitRail'
+import { BuildProvider } from '@/build/components'
+import { TerminalSlot } from '@/build/TerminalSlot'
+import { HeroSection } from '@/components/home/HeroSection'
+import { OutroSection } from '@/components/home/OutroSection'
+import { ProjectsSection } from '@/components/home/ProjectsSection'
+import { StorySection } from '@/components/home/StorySection'
+import * as styles from './Home.css'
+
+/** '/#story'처럼 해시가 붙어 들어오면 그 구역으로 이동합니다 */
+function useHashScroll() {
+  const location = useLocation()
+  useEffect(() => {
+    if (!location.hash) return
+    const target = document.getElementById(decodeURIComponent(location.hash.slice(1)))
+    if (!target) return
+    const frame = requestAnimationFrame(() =>
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [location.hash, location.key])
+}
 
 export default function Home() {
-  const projectsToShow = featuredProjects.length ? featuredProjects : sortedProjects.slice(0, 3)
+  useHashScroll()
 
   return (
-    <>
-      <Hero />
-
-      <Container>
-        <section className={section}>
-          <div className={sectionHead}>
-            <h2 className={sectionTitle}>
-              {projectsToShow.length > 0 ? 'Featured Projects' : 'Projects'}
-            </h2>
-            {projectsToShow.length > 0 && (
-              <Link className={sectionLink} to="/projects">
-                전체 보기 →
-              </Link>
-            )}
-          </div>
-          {projectsToShow.length > 0 ? (
-            <div className={grid}>
-              {projectsToShow.map((project, i) => (
-                <ProjectCard key={project.id} project={project} index={i} />
-              ))}
-            </div>
-          ) : (
-            <p className={empty}>프로젝트를 준비 중입니다.</p>
-          )}
-        </section>
-
-        {projectsToShow.length > 0 && (
-          <section className={ctaSection}>
-            <h2 className={ctaTitle}>더 많은 작업물이 궁금하신가요?</h2>
-            <Button to="/projects" tone="primary" size="lg">
-              모든 프로젝트 보기
-            </Button>
-          </section>
-        )}
-      </Container>
-    </>
+    <BuildProvider>
+      <div className={styles.page}>
+        <div className={styles.content}>
+          <HeroSection />
+          <StorySection />
+          <ProjectsSection />
+          <OutroSection />
+        </div>
+        <aside className={styles.aside} aria-label="안내 패널">
+          <TerminalSlot className={styles.terminal} />
+          <CommitRail className={styles.rail} />
+        </aside>
+      </div>
+    </BuildProvider>
   )
 }

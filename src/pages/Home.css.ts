@@ -1,62 +1,51 @@
 import { style } from '@vanilla-extract/css'
 import { vars } from '@/styles/theme.css'
 
-export const section = style({
-  padding: `${vars.space[16]} 0`,
-})
+const narrow = 'screen and (max-width: 1079px)'
 
-export const sectionHead = style({
-  display: 'flex',
-  alignItems: 'flex-end',
-  justifyContent: 'space-between',
-  marginBottom: vars.space[10],
-  gap: vars.space[4],
-})
-
-export const sectionTitle = style({
-  fontSize: vars.fontSize.h2,
-  fontWeight: vars.fontWeight.extrabold,
-  color: vars.color.textPrimary,
-  letterSpacing: '-0.02em',
-})
-
-export const sectionLink = style({
-  fontSize: vars.fontSize.small,
-  fontWeight: vars.fontWeight.semibold,
-  color: vars.color.blue500,
-  whiteSpace: 'nowrap',
-})
-
-export const grid = style({
+export const page = style({
   display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
-  gap: vars.space[6],
-
+  gridTemplateColumns: `minmax(0, 1fr) ${vars.layout.aside}`,
+  alignItems: 'start',
+  gap: vars.space[8],
+  width: '100%',
+  maxWidth: vars.layout.wide,
+  margin: '0 auto',
+  padding: `${vars.space[8]} ${vars.space[6]} ${vars.space[24]}`,
   '@media': {
-    'screen and (max-width: 900px)': {
-      gridTemplateColumns: 'repeat(2, 1fr)',
-    },
-    'screen and (max-width: 600px)': {
-      gridTemplateColumns: '1fr',
+    [narrow]: {
+      gridTemplateColumns: 'minmax(0, 1fr)',
+      padding: `${vars.space[6]} ${vars.space[4]} 120px`,
     },
   },
 })
 
-export const empty = style({
-  padding: `${vars.space[16]} 0`,
-  textAlign: 'center',
-  color: vars.color.textTertiary,
-  fontSize: vars.fontSize.bodyLg,
+export const content = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: vars.space[16],
+  minWidth: 0,
 })
 
-export const ctaSection = style({
-  padding: `${vars.space[24]} 0`,
-  textAlign: 'center',
+export const aside = style({
+  position: 'sticky',
+  top: `calc(${vars.layout.header} + ${vars.space[6]})`,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: vars.space[4],
+  height: `calc(100vh - ${vars.layout.header} - ${vars.space[12]})`,
+  minHeight: '420px',
+  '@media': {
+    [narrow]: {
+      display: 'none',
+    },
+  },
 })
 
-export const ctaTitle = style({
-  fontSize: vars.fontSize.h2,
-  fontWeight: vars.fontWeight.extrabold,
-  color: vars.color.textPrimary,
-  marginBottom: vars.space[8],
+export const terminal = style({
+  flex: '1 1 58%',
+})
+
+export const rail = style({
+  flex: '1 1 42%',
 })
