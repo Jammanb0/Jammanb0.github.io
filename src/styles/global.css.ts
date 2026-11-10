@@ -1,8 +1,13 @@
-import { globalStyle } from '@vanilla-extract/css'
+import { globalStyle, style } from '@vanilla-extract/css'
 import { vars } from './theme.css'
 
 globalStyle('*, *::before, *::after', {
   boxSizing: 'border-box',
+})
+
+globalStyle('html', {
+  // 고정 헤더 아래로 앵커가 가려지지 않게
+  scrollPaddingTop: `calc(${vars.layout.header} + 24px)`,
 })
 
 globalStyle('html, body', {
@@ -11,7 +16,12 @@ globalStyle('html, body', {
 })
 
 globalStyle('body', {
-  backgroundColor: vars.color.background,
+  // 사원증을 끌어 화면 밖으로 내보내도 가로 스크롤이 생기지 않게 화면 가장자리에서만 자릅니다
+  overflowX: 'clip',
+  backgroundColor: vars.color.canvas,
+  // 디자인 도구 캔버스의 점 격자
+  backgroundImage: `radial-gradient(${vars.color.canvasDot} 1px, transparent 1.2px)`,
+  backgroundSize: '22px 22px',
   color: vars.color.textPrimary,
   fontFamily: vars.font.family,
   fontSize: vars.fontSize.body,
@@ -38,6 +48,7 @@ globalStyle('button', {
   border: 'none',
   background: 'none',
   padding: 0,
+  color: 'inherit',
 })
 
 globalStyle('a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible', {
@@ -74,4 +85,17 @@ globalStyle('*, *::before, *::after', {
       transitionDuration: '0.01ms',
     },
   },
+})
+
+/** 화면에는 안 보이고 스크린리더만 읽는 텍스트 */
+export const srOnly = style({
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: 0,
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
 })

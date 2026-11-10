@@ -38,6 +38,17 @@ export const button = recipe({
           },
         },
       },
+      /** 회색 캔버스 위에서도 또렷한 흰 버튼 */
+      surface: {
+        backgroundColor: vars.color.white,
+        color: vars.color.textPrimary,
+        boxShadow: `inset 0 0 0 1px ${vars.color.gray200}, 0 1px 2px rgba(15, 23, 42, 0.05)`,
+        selectors: {
+          '&:hover': {
+            backgroundColor: vars.color.gray50,
+          },
+        },
+      },
       ghost: {
         backgroundColor: 'transparent',
         color: vars.color.textSecondary,

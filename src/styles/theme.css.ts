@@ -26,10 +26,31 @@ export const vars = createGlobalTheme(':root', {
     textSecondary: '#4E5968',
     textTertiary: '#8B95A1',
     border: '#E5E8EB',
+    // 디자인 도구 캔버스처럼 보이는 바탕과 작업 표시 색
+    canvas: '#F2F3F5',
+    canvasDot: '#D3D8DF',
+    frame: '#FFFFFF',
+    placeholder: '#C2C9D2',
+    selection: '#3182F6',
+  },
+  // 안내 터미널 색
+  term: {
+    bg: '#101216',
+    bar: '#181B21',
+    line: '#262A33',
+    fg: '#E6E8EB',
+    dim: '#7D8590',
+    green: '#4AC26B',
+    blue: '#79B8FF',
+    orange: '#FFAB70',
+    purple: '#D2A8FF',
+    red: '#FF7B72',
+    yellow: '#E3B341',
   },
   font: {
     family:
       "-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard Variable', Pretendard, 'Segoe UI', Roboto, 'Noto Sans KR', 'Malgun Gothic', sans-serif",
+    mono: "ui-monospace, SFMono-Regular, 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas, 'D2Coding', monospace",
   },
   fontSize: {
     display: '3.5rem',
@@ -78,8 +99,8 @@ export const vars = createGlobalTheme(':root', {
     full: '999px',
   },
   shadow: {
-    card: '0 2px 8px rgba(15, 23, 42, 0.04)',
-    cardHover: '0 12px 32px rgba(49, 130, 246, 0.09), 0 2px 8px rgba(15, 23, 42, 0.04)',
+    card: '0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05)',
+    cardHover: '0 1px 2px rgba(15, 23, 42, 0.04), 0 16px 40px rgba(49, 130, 246, 0.12)',
     floating: '0 16px 48px rgba(15, 23, 42, 0.14)',
   },
   transition: {
@@ -88,10 +109,17 @@ export const vars = createGlobalTheme(':root', {
     slow: '0.45s cubic-bezier(0.16, 1, 0.3, 1)',
   },
   zIndex: {
+    // 조립 선택 상자는 페이지 내용(태그 목록 5)보다는 위, 안내 터미널(15, 펼치면 30)과
+    // 사원증(20)보다는 아래에 그립니다. 터미널을 펼쳐 둔 자리에 상자가 겹쳐 뜨지 않게 합니다
+    overlay: '12',
     header: '100',
+    bar: '110',
     modal: '1000',
   },
   layout: {
     maxWidth: '1120px',
+    wide: '1280px',
+    header: '64px',
+    aside: '340px',
   },
 })
