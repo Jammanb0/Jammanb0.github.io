@@ -14,10 +14,10 @@
 export const profile = {
   name: 'Guhn Park',
   nameKo: '박건',
-  role: 'Frontend Developer',
+  role: 'Web Developer & AI Builder',
   tagline: '생각은 자유롭게,\n코드는 견고하게.',
   intro: '사용자의 경험을 세심하게 다듬고, 오래 유지되는 코드를 만듭니다.',
-  bio: '작은 디테일과 예외 상황까지 놓치지 않는 꼼꼼함이 서비스의 완성도를 만든다고 믿습니다. 기획을 그대로 옮기는 데 그치지 않고, 논리적이고 견고한 코드로 아이디어를 사용자에게 가치 있는 결과물로 구현하는 프론트엔드 개발자입니다.',
+  bio: '작은 디테일과 예외 상황까지 놓치지 않는 꼼꼼함이 서비스의 완성도를 만든다고 믿습니다. 기획을 그대로 옮기는 데 그치지 않고, 논리적이고 견고한 코드로 아이디어를 사용자에게 가치 있는 결과물로 구현합니다. 화면과 서버를 가리지 않고 필요한 것을 직접 만들며, 그 과정에서 AI를 적극적으로 활용합니다.',
   email: 'parkguhn@daum.net',
   avatar: '/profile_avatar.jpg',
   badgePhoto: '/badge_photo.jpg',

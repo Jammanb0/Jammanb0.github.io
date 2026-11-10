@@ -254,9 +254,11 @@ export const nameEn = style({
 export const role = style({
   marginTop: '8px',
   fontFamily: vars.font.mono,
-  fontSize: '9.5px',
+  // 'WEB DEVELOPER & AI BUILDER'가 카드 안쪽 폭(168px) 한 줄에 들어가는 크기와 간격
+  fontSize: '9px',
   fontWeight: vars.fontWeight.bold,
-  letterSpacing: '0.16em',
+  letterSpacing: '0.12em',
+  whiteSpace: 'nowrap',
   color: vars.color.blue600,
 })
 
