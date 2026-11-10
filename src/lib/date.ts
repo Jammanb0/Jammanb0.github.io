@@ -1,4 +1,5 @@
-function formatMonth(iso: string) {
+/** '2026-10-09' → '2026.10' */
+export function formatMonth(iso: string) {
   const [year, month] = iso.split('-')
   return `${year}.${month}`
 }
