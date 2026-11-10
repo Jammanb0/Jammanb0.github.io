@@ -83,6 +83,11 @@ globalStyle(`${wrapper} pre code`, {
   padding: 0,
 })
 
+/** 좁은 화면에서 표가 넘치면 표만 가로로 스크롤합니다 */
+export const tableWrap = style({
+  overflowX: 'auto',
+})
+
 globalStyle(`${wrapper} table`, {
   width: '100%',
   borderCollapse: 'collapse',

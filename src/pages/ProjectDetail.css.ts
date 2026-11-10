@@ -1,8 +1,18 @@
 import { style } from '@vanilla-extract/css'
 import { vars } from '@/styles/theme.css'
 
-export const wrapper = style({
-  padding: `${vars.space[10]} 0 ${vars.space[24]}`,
+const mobile = 'screen and (max-width: 760px)'
+
+export const head = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: vars.space[4],
+  padding: '36px 44px 40px',
+  '@media': {
+    [mobile]: {
+      padding: '24px 22px 28px',
+    },
+  },
 })
 
 export const back = style({
@@ -12,7 +22,6 @@ export const back = style({
   fontSize: vars.fontSize.small,
   fontWeight: vars.fontWeight.semibold,
   color: vars.color.textSecondary,
-  marginBottom: vars.space[8],
   selectors: {
     '&:hover': {
       color: vars.color.textPrimary,
@@ -20,82 +29,121 @@ export const back = style({
   },
 })
 
-export const header = style({
-  marginBottom: vars.space[8],
-})
-
-export const metaRow = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: vars.space[2],
-  fontSize: vars.fontSize.caption,
-  color: vars.color.textTertiary,
+export const meta = style({
+  fontSize: vars.fontSize.small,
   fontWeight: vars.fontWeight.semibold,
-  marginBottom: vars.space[3],
-})
-
-export const metaDivider = style({
-  color: vars.color.gray300,
+  color: vars.color.textTertiary,
 })
 
 export const title = style({
-  fontSize: vars.fontSize.h1,
+  fontSize: 'clamp(1.875rem, 4vw, 2.75rem)',
   fontWeight: vars.fontWeight.extrabold,
-  letterSpacing: '-0.02em',
+  lineHeight: 1.25,
+  letterSpacing: '-0.03em',
   color: vars.color.textPrimary,
-
-  '@media': {
-    'screen and (max-width: 640px)': {
-      fontSize: vars.fontSize.h2,
-    },
-  },
 })
 
-export const tagRow = style({
+export const tags = style({
   display: 'flex',
+  flexWrap: 'wrap',
   gap: vars.space[2],
-  marginTop: vars.space[5],
 })
 
 export const media = style({
   display: 'flex',
   flexDirection: 'column',
-  gap: vars.space[5],
-  marginBottom: vars.space[10],
+  gap: vars.space[4],
+  padding: vars.space[4],
 })
 
-export const bannerImage = style({
+export const banner = style({
   width: '100%',
   aspectRatio: '16 / 9',
-  borderRadius: vars.radius.lg,
   objectFit: 'cover',
-})
-
-export const description = style({
-  maxWidth: '68ch',
-  marginBottom: vars.space[10],
+  borderRadius: '16px',
 })
 
 export const highlights = style({
   display: 'flex',
   flexDirection: 'column',
   gap: vars.space[3],
-  padding: vars.space[6],
-  borderRadius: vars.radius.lg,
-  backgroundColor: vars.color.backgroundAlt,
-  marginBottom: vars.space[10],
+  padding: '28px 32px',
+  '@media': {
+    [mobile]: {
+      padding: '22px 20px',
+    },
+  },
 })
 
 export const highlightItem = style({
   display: 'flex',
   gap: vars.space[3],
   fontSize: vars.fontSize.small,
-  color: vars.color.textSecondary,
   lineHeight: vars.lineHeight.body,
+  color: vars.color.textSecondary,
 })
 
 export const highlightMark = style({
   flexShrink: 0,
   color: vars.color.blue500,
   fontWeight: vars.fontWeight.bold,
+})
+
+export const body = style({
+  padding: '40px 48px 44px',
+  '@media': {
+    [mobile]: {
+      padding: '26px 20px 30px',
+    },
+  },
+})
+
+export const pager = style({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  gap: vars.space[4],
+  '@media': {
+    [mobile]: {
+      gridTemplateColumns: 'minmax(0, 1fr)',
+    },
+  },
+})
+
+export const pagerLink = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+  height: '100%',
+  padding: '20px 22px',
+  borderRadius: '20px',
+  backgroundColor: vars.color.frame,
+  boxShadow: '0 1px 2px rgba(15, 23, 42, 0.05)',
+  transition: `transform ${vars.transition.fast}, box-shadow ${vars.transition.fast}`,
+  selectors: {
+    '&:hover': {
+      transform: 'translateY(-3px)',
+      boxShadow: '0 12px 28px -18px rgba(15, 23, 42, 0.35)',
+    },
+  },
+})
+
+export const pagerNext = style({
+  textAlign: 'right',
+  gridColumn: 2,
+  '@media': {
+    [mobile]: {
+      gridColumn: 1,
+    },
+  },
+})
+
+export const pagerHint = style({
+  fontSize: vars.fontSize.caption,
+  fontWeight: vars.fontWeight.semibold,
+  color: vars.color.textTertiary,
+})
+
+export const pagerTitle = style({
+  fontWeight: vars.fontWeight.bold,
+  color: vars.color.textPrimary,
 })
