@@ -81,7 +81,7 @@ export const projects: Project[] = [
 
 ## 공개와 배포
 
-소스는 MIT 라이선스로 공개했고, 함께 쓰는 라이브러리의 라이선스 고지와 소스에서 직접 EXE를 다시 만드는 방법을 문서로 정리했습니다. 내려받아 바로 쓰는 EXE 배포본은 아직 올리지 않았습니다.`,
+소스는 MIT 라이선스로 공개했고, 함께 쓰는 라이브러리의 라이선스 고지와 소스에서 직접 EXE를 다시 만드는 방법을 문서로 정리했습니다. Windows용 EXE는 미리보기 판(\`v0.1.0-preview.1\`)으로 올려 두었고, 정식 배포 전 점검을 하고 있습니다.`,
     tags: ['Python', 'tkinter', 'pikepdf', 'img2pdf', 'Windows', 'Claude Code'],
     links: [
       { label: 'GitHub', url: 'https://github.com/Jammanb0/lesserdam', icon: 'github' },
@@ -439,7 +439,7 @@ AI가 생성한 결과를 그럴듯해 보인다는 이유만으로 통과시키
       'vanilla-extract 기반 디자인 시스템, Framer Motion·GSAP 애니메이션을 Claude Code와 함께 구현',
       '마크다운·유튜브 임베드와 검색·태그·연도 필터를 정적 데이터 구조로 구현',
       '프로젝트 데이터 검증, 경로별 메타데이터, 로딩·오류 복구 상태로 운영 안정성 강화',
-      'GitHub Actions 자동 검증·Pages 배포를 구축하고 v1.9.0까지 오픈소스로 릴리즈',
+      'GitHub Actions 자동 검증·Pages 배포를 구축하고 v1.9.1까지 오픈소스로 릴리즈',
     ],
     description: `## 프로젝트 개요
 
@@ -502,7 +502,7 @@ Claude Code(AI 코딩 에이전트)를 활용해 기획부터 구현, 테스트,
 
 ## 결과
 
-현재 \`v1.9.0\`까지 버전과 GitHub Release를 관리하며 공개 오픈소스 템플릿으로 유지하고 있습니다. 이 포트폴리오 사이트에도 동일한 자동 검증·배포 구조를 적용해 실제 GitHub Pages 운영까지 확인했습니다.`,
+현재 \`v1.9.1\`까지 버전과 GitHub Release를 관리하며 공개 오픈소스 템플릿으로 유지하고 있습니다. 이 포트폴리오 사이트에도 동일한 자동 검증·배포 구조를 적용해 실제 GitHub Pages 운영까지 확인했습니다.`,
     tags: ['React', 'TypeScript', 'vanilla-extract', 'Framer Motion', 'GSAP', 'Claude Code'],
     links: [
       { label: 'GitHub', url: 'https://github.com/Jammanb0/swiftfolio-template', icon: 'github' },
