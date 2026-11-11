@@ -13,6 +13,12 @@ export const area = style({
   minHeight: '460px',
   perspective: '1100px',
   pointerEvents: 'none',
+  selectors: {
+    // 좁은 화면에서 떨어지는 동안: 칸 위쪽 고리 아래로 내려오는 것처럼 칸 밖을 가립니다
+    '&[data-clipped="true"]': {
+      overflow: 'hidden',
+    },
+  },
   '@media': {
     'screen and (max-width: 720px)': {
       minHeight: '440px',

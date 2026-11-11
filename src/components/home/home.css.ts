@@ -3,6 +3,12 @@ import { vars } from '@/styles/theme.css'
 
 const mobile = 'screen and (max-width: 760px)'
 
+/**
+ * 첫 화면이 한 줄로 쌓이는 폭. 이때는 소개 문구가 먼저 나오고 사원증은 그 아래 칸에 걸립니다.
+ * HeroSection도 이 값으로 사원증 걸 자리를 정합니다
+ */
+export const HERO_STACKED = 'screen and (max-width: 860px)'
+
 // ── 묶음(내 이야기, 만든 것들) ───────────────────────────
 
 export const group = style({
@@ -41,7 +47,7 @@ export const heroFrame = style({
   minHeight: '500px',
   padding: '44px 44px 40px',
   '@media': {
-    'screen and (max-width: 860px)': {
+    [HERO_STACKED]: {
       gridTemplateColumns: 'minmax(0, 1fr)',
       gap: vars.space[2],
       padding: '28px 22px 32px',
@@ -91,13 +97,13 @@ export const heroActions = style({
 
 export const badgeColumn = style({
   position: 'relative',
-  // 사원증을 끌어당기면 옆 패널(터미널·커밋 기록)과 다른 구역보다 위로 올라오게 합니다.
-  // 헤더(100)와 선택 상자 층(90)보다는 아래입니다
+  // 사원증을 끌어당기면 옆 패널(터미널·커밋 기록)과 다른 구역, 조립 선택 상자(12)보다 위로
+  // 올라오게 합니다. 헤더(100)와 화면 구석의 작은 바 터미널(30)보다는 아래입니다
   zIndex: 20,
   minHeight: '460px',
   '@media': {
-    'screen and (max-width: 860px)': {
-      order: -1,
+    // 좁은 화면에서는 누구인지·무엇을 만들었는지가 먼저 보이도록 소개 문구 다음에 둡니다
+    [HERO_STACKED]: {
       minHeight: '440px',
     },
   },

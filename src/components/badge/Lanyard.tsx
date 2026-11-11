@@ -34,6 +34,10 @@ class LanyardController {
   /** 걸이를 맞출 프레임 선택자. 없으면 영역 위쪽 경계에 겁니다 */
   hookSelector: string | null = null
   private hookOffset = 0
+  /** 프레임 위 테두리에 걸었는지(넓은 화면). 아니면 사원증 칸 위쪽에 겁니다 */
+  private frameHooked = false
+  /** 떨어지는 동안 사원증 칸 밖을 가리고 있는지 */
+  private clipped = false
   reduced = false
   started = false
   private cardWidth = 200
@@ -47,13 +51,16 @@ class LanyardController {
 
   mount() {
     if (!this.area || typeof ResizeObserver === 'undefined') return
-    this.resizeObserver = new ResizeObserver(() => {
-      this.measure()
-      this.render()
-      if (this.started) this.wake()
-    })
+    this.resizeObserver = new ResizeObserver(() => this.relayout())
     this.resizeObserver.observe(this.area)
     this.measure()
+  }
+
+  /** 크기나 걸이 위치가 바뀌었을 때(화면 폭이 바뀌어 배치가 달라질 때 등) 다시 재고 그립니다 */
+  relayout() {
+    this.measure()
+    this.render()
+    if (this.started) this.wake()
   }
 
   dispose() {
@@ -67,13 +74,11 @@ class LanyardController {
   measure() {
     if (!this.area || !this.card) return
     const frame = this.hookSelector ? this.area.closest(this.hookSelector) : null
-    if (frame) {
-      // 걸이를 프레임 위 테두리에 맞춥니다
-      this.hookOffset = Math.max(
-        0,
-        this.area.getBoundingClientRect().top - frame.getBoundingClientRect().top,
-      )
-    }
+    // 걸이를 프레임 위 테두리에 맞춥니다. 걸 프레임이 없으면 사원증 칸 위쪽에 겁니다
+    this.frameHooked = frame !== null
+    this.hookOffset = frame
+      ? Math.max(0, this.area.getBoundingClientRect().top - frame.getBoundingClientRect().top)
+      : 0
     this.cardWidth = this.card.offsetWidth || this.cardWidth
     const cardLength = Math.max(120, this.card.offsetHeight - 8)
     this.sim.setCardLength(cardLength)
@@ -86,10 +91,18 @@ class LanyardController {
 
   drop() {
     this.measure()
-    const top = this.area?.getBoundingClientRect().top ?? 0
     const { ropeLength, cardLength } = this.sim.options
-    // 카드가 화면 위쪽 바깥에서 출발하도록 높이를 잡습니다
-    const height = Math.max(420, top + this.hookOffset + ropeLength + cardLength + 60)
+    let height: number
+    if (this.frameHooked) {
+      // 넓은 화면: 카드가 화면 위쪽 바깥에서 출발하도록 높이를 잡습니다
+      const top = this.area?.getBoundingClientRect().top ?? 0
+      height = Math.max(420, top + this.hookOffset + ropeLength + cardLength + 60)
+    } else {
+      // 좁은 화면: 위에 있는 소개 글자를 덮으며 지나가지 않도록 사원증 칸 바로 위에서 출발하고,
+      // 떨어지는 동안은 칸 밖을 가려서 칸 위쪽 고리 아래로 내려오는 것처럼 보이게 합니다
+      height = ropeLength + cardLength + 40
+      this.setClipped(true)
+    }
     this.sim.drop(height)
     this.started = true
     this.setVisible(true)
@@ -100,6 +113,7 @@ class LanyardController {
 
   rest() {
     this.measure()
+    this.setClipped(false)
     this.sim.rest(this.reduced ? 0 : 0.18)
     this.started = true
     this.setVisible(true)
@@ -113,7 +127,14 @@ class LanyardController {
     clearTimeout(this.breezeTimer)
     this.sim.release()
     this.stop()
+    this.setClipped(false)
     this.setVisible(false)
+  }
+
+  /** 떨어지는 동안만 사원증 칸 밖을 가립니다. 걸리고 나면 끌어서 칸 밖으로 내보낼 수 있게 풉니다 */
+  private setClipped(value: boolean) {
+    this.clipped = value
+    if (this.area) this.area.dataset.clipped = String(value)
   }
 
   /**
@@ -219,6 +240,7 @@ class LanyardController {
       this.sim.step(STEP)
       this.acc -= STEP
     }
+    if (this.clipped && !this.sim.dropping) this.setClipped(false)
     this.render()
     this.quiet = this.sim.motion() < 0.04 ? this.quiet + 1 : 0
     if (this.quiet > 40) {
@@ -324,6 +346,11 @@ export function Lanyard({ hookSelector, className }: LanyardProps) {
     ctl.mount()
     return () => ctl.dispose()
   }, [ctl])
+
+  // 화면 폭에 따라 걸 자리가 바뀌면(프레임 위 테두리 ↔ 사원증 칸 위쪽) 바로 다시 맞춥니다
+  useEffect(() => {
+    ctl.relayout()
+  }, [ctl, hookSelector])
 
   useEffect(() => {
     if (!state.visible) {

@@ -5,6 +5,7 @@ import { FrameLabel } from '@/components/frame/FrameLabel'
 import { section } from '@/components/frame/frame.css'
 import { Button } from '@/components/ui/Button'
 import { profile } from '@/data/profile'
+import { useMediaQuery } from '@/lib/useMediaQuery'
 import * as styles from './home.css'
 
 const HERO_COMMIT = { message: 'feat: 첫 화면' }
@@ -15,8 +16,12 @@ function scrollToProjects() {
 
 /**
  * 첫 화면. 틀이 그려지면 사원증이 떨어지는 동안 옆에서 제목과 소개가 함께 입력됩니다.
+ * 좁은 화면에서는 소개 문구가 먼저 나오고, 사원증은 그 아래 칸 위쪽에 걸립니다
+ * (틀 위 테두리에 걸면 끈이 글자 위를 가로지르기 때문입니다).
  */
 export function HeroSection() {
+  const stacked = useMediaQuery(styles.HERO_STACKED)
+
   return (
     <BuildSection
       id="hero"
@@ -47,7 +52,7 @@ export function HeroSection() {
           </BuildReveal>
         </div>
         <div className={styles.badgeColumn}>
-          <Lanyard hookSelector="[data-hook-frame]" />
+          <Lanyard hookSelector={stacked ? undefined : '[data-hook-frame]'} />
         </div>
       </BuildBox>
     </BuildSection>
