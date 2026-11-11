@@ -272,13 +272,7 @@ export function GuideTerminal() {
   if (!director) return null
 
   return (
-    <div
-      ref={shellRef}
-      className={styles.shell}
-      data-mode={mode}
-      data-panel={panel}
-      data-raised={panel !== 'none'}
-    >
+    <div ref={shellRef} className={styles.shell} data-mode={mode} data-panel={panel}>
       <DirectorContext.Provider value={director}>
         {mode === 'mini' && variant === 'mini' && (
           <CommitPeek

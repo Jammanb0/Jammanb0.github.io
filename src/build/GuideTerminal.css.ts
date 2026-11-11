@@ -8,7 +8,7 @@ import { vars } from '@/styles/theme.css'
  */
 export const shell = style({
   position: 'fixed',
-  // 사원증(20)보다는 아래, 일반 내용보다는 위
+  // 옆 패널에 크게 붙어 있을 때는 사원증(20)보다 아래: 사원증을 끌어 패널 위로 올릴 수 있게 합니다
   zIndex: 15,
   selectors: {
     '&[data-mode="mini"]': {
@@ -16,13 +16,12 @@ export const shell = style({
       bottom: vars.space[5],
       width: 'min(400px, calc(100vw - 24px))',
       height: '46px',
+      // 작은 바는 화면 구석에 떠 있는 도구라 사원증(20)에 가려지지 않게 위에 둡니다.
+      // 펼친 로그·커밋 목록도 이 껍데기 안에 있어서 함께 위에 옵니다
+      zIndex: 30,
     },
     '&[data-mode="mini"][data-panel="log"]': {
       height: 'min(320px, 60vh)',
-    },
-    // 로그나 커밋 목록을 펼쳐서 읽는 동안에는 사원증(20)보다 위로 올라옵니다
-    '&[data-raised="true"]': {
-      zIndex: 30,
     },
   },
   '@media': {

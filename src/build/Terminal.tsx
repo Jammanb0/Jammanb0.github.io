@@ -94,6 +94,12 @@ export function TerminalPanel({ variant, expanded, onToggle }: TerminalPanelProp
   const compact = variant === 'mini' && !expanded
   const last = lines[lines.length - 1]
 
+  // 다른 페이지로 가서 새 로그가 시작되거나 로그 창이 다시 열리면, 전에 위로 올려 읽던 것과
+  // 상관없이 다시 맨 아래(최신 줄)를 따라갑니다. 아래 효과보다 먼저 실행되도록 앞에 둡니다
+  useEffect(() => {
+    stickRef.current = true
+  }, [director, compact])
+
   useEffect(() => {
     const body = bodyRef.current
     if (body && stickRef.current) body.scrollTop = body.scrollHeight
