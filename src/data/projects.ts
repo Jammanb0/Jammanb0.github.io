@@ -428,7 +428,7 @@ AI가 생성한 결과를 그럴듯해 보인다는 이유만으로 통과시키
     id: 'swiftfolio-template',
     title: 'Swiftfolio Template — 포트폴리오 사이트 템플릿',
     summary:
-      '화이트 배경에 블루 포인트 컬러를 쓴 깔끔한 UI의 React + TypeScript 포트폴리오 템플릿. 이 사이트도 이걸로 만들었습니다.',
+      '화이트 배경에 블루 포인트 컬러를 쓴 깔끔한 UI의 React + TypeScript 포트폴리오 템플릿. 이 사이트도 이 템플릿에서 출발했습니다.',
     role: 'Solo Developer (기획 · Claude Code와 협업 개발)',
     highlights: [
       'vanilla-extract 기반 디자인 시스템, Framer Motion·GSAP 애니메이션을 Claude Code와 함께 구현',
@@ -438,7 +438,9 @@ AI가 생성한 결과를 그럴듯해 보인다는 이유만으로 통과시키
     ],
     description: `## 프로젝트 개요
 
-제 개인 포트폴리오 사이트(지금 보고 계신 이 사이트)를 만들면서, 다른 사람도 자신의 \`username.github.io\` 사이트를 쉽게 만들 수 있도록 별도 오픈소스 템플릿으로 분리했습니다. GitHub의 **Use this template** 기능으로 독립된 저장소를 만들고 프로필과 프로젝트 데이터만 바꾸면 사용할 수 있습니다.
+제 개인 포트폴리오 사이트를 만들면서, 다른 사람도 자신의 \`username.github.io\` 사이트를 쉽게 만들 수 있도록 별도 오픈소스 템플릿으로 분리했습니다. GitHub의 **Use this template** 기능으로 독립된 저장소를 만들고 프로필과 프로젝트 데이터만 바꾸면 사용할 수 있습니다.
+
+지금 보고 계신 이 사이트도 이 템플릿에서 출발했지만, 2026년 11월부터는 템플릿과 별개로 디자인과 구조를 새로 만들어 운영하고 있습니다.
 
 ## 주요 기능
 
