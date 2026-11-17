@@ -5,19 +5,19 @@ import { FrameLabel } from '@/components/frame/FrameLabel'
 import { section } from '@/components/frame/frame.css'
 import * as styles from './home.css'
 
-const OUTRO_COMMIT = { message: 'feat: 마무리' }
+const OUTRO_COMMIT = { message: 'feat: 더 둘러보기' }
 
 /** 홈의 끝. 다음에 갈 곳(전체 프로젝트, 연락처)을 알려줍니다 */
 export function OutroSection() {
   return (
     <BuildSection
       id="outro"
-      label="마무리"
+      label="더 둘러보기"
       guide="더 보고 싶은 곳이 있다면 여기서 이어 가세요."
       commit={OUTRO_COMMIT}
       className={section}
     >
-      <FrameLabel text="마무리" />
+      <FrameLabel text="더 둘러보기" />
       <BuildBox id="outro-card" name=".outro" decls={DARK} className={styles.outroCard}>
         <BuildText id="outro-title" as="h2" text="더 궁금하다면" className={styles.outroTitle} />
         <BuildText

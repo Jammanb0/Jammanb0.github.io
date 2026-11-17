@@ -8,7 +8,7 @@ import { profile } from '@/data/profile'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import * as styles from './home.css'
 
-const HERO_COMMIT = { message: 'feat: 첫 화면' }
+const HERO_COMMIT = { message: 'feat: 프로필' }
 
 function scrollToProjects() {
   document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -25,12 +25,12 @@ export function HeroSection() {
   return (
     <BuildSection
       id="hero"
-      label="첫 화면"
+      label="프로필"
       guide={`안녕하세요! ${profile.nameKo}의 포트폴리오를 안내해 드릴게요.`}
       commit={HERO_COMMIT}
       className={section}
     >
-      <FrameLabel text="첫 화면" />
+      <FrameLabel text="프로필" />
       <BuildBox
         id="hero-frame"
         name=".hero"
