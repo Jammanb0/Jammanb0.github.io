@@ -77,10 +77,14 @@ export const item = style({
   padding: `7px ${vars.space[2]} 7px 0`,
   borderRadius: vars.radius.sm,
   textAlign: 'left',
-  transition: `background-color ${vars.transition.fast}`,
+  transition: `background-color ${vars.transition.base}`,
   selectors: {
     '&:hover': {
       backgroundColor: vars.color.gray50,
+    },
+    // 지금 보고 있는 구역의 줄. 스크롤을 따라 이 강조가 위아래로 옮겨 갑니다
+    '&[aria-current="true"]': {
+      backgroundColor: vars.color.blue50,
     },
     '&[data-highlighted="true"]': {
       animation: `${flash} 1.8s ease-out`,
@@ -114,6 +118,10 @@ export const node = style({
     '&[data-status="done"]::before': {
       borderColor: vars.term.green,
       backgroundColor: vars.term.green,
+    },
+    // 지금 보고 있는 줄의 점에는 옅은 고리를 둘러 위치를 짚어 줍니다
+    [`${item}[aria-current="true"] &::before`]: {
+      boxShadow: '0 0 0 4px rgba(49, 130, 246, 0.2)',
     },
   },
 })

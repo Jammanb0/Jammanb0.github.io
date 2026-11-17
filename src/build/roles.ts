@@ -9,14 +9,15 @@ export const ROLES: Record<Role, { label: string; color: string }> = {
 }
 
 /**
- * 동시에 움직이는 작업자 구성. 역할마다 둘씩, 모두 여덟이 함께 일합니다.
- * 카드가 많은 화면(프로젝트 목록)에서도 틀 그리기·CSS가 한 사람에게 몰려 늦어지지 않게 합니다.
+ * 동시에 움직이는 작업자 구성. 역할마다 둘씩에 글자 일이 가장 많아 텍스트만 셋, 모두 아홉이
+ * 함께 일합니다. 카드가 많은 화면이나 글자가 몰린 화면에서도 한 사람에게 일이 쌓여 늦어지지 않게 합니다.
  */
 export const WORKER_ROLES: readonly Role[] = [
   'layout',
   'layout',
   'style',
   'style',
+  'copy',
   'copy',
   'copy',
   'place',

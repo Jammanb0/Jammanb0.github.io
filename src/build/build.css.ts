@@ -50,6 +50,14 @@ export const ghost = style({
   color: 'transparent',
 })
 
+/** 복제해 온 글자를 고쳐 쓰기 직전, 지울 글자를 선택한 모습 */
+export const selected = style({
+  backgroundColor: 'rgba(49, 130, 246, 0.24)',
+  borderRadius: '2px',
+  boxDecorationBreak: 'clone',
+  WebkitBoxDecorationBreak: 'clone',
+})
+
 export const caret = style({
   display: 'inline-block',
   width: '2px',

@@ -168,11 +168,21 @@ export function BuildText({ id, text, as: Tag = 'p', className, ...rest }: Build
   const [ref, state] = useBuildTarget({ id, kind: 'text', text })
   const typed = Math.min(state.typed, text.length)
   const done = typed >= text.length
+  // 복제해 온 카드라면 고쳐 쓰기 전까지 원래 카드의 글자가 그대로 보입니다
+  const prior = !done && state.visible && typed === 0 ? state.prior : undefined
 
   return (
     <Tag ref={ref} className={cx(styles.text, className)} data-bt-visible={state.visible} {...rest}>
       {done ? (
         text
+      ) : prior !== undefined ? (
+        <>
+          <span className={srOnly}>{text}</span>
+          <span aria-hidden="true">
+            <span className={state.selected ? styles.selected : undefined}>{prior}</span>
+            {!state.selected && <span className={styles.caret} />}
+          </span>
+        </>
       ) : (
         <>
           <span className={srOnly}>{text}</span>

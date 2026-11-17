@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { srOnly } from '@/styles/global.css'
 import { useBuildRail, useBuildUi, useDirector } from './hooks'
 import type { RailItem } from './types'
@@ -18,14 +18,47 @@ interface CommitListProps {
   onPick: (sectionId: string) => void
 }
 
+/**
+ * 커밋 목록. 지금 보고 있는 구역의 줄을 강조하고, 목록이 길어 넘치면 그 줄이 목록 가운데에 오도록
+ * 위아래로 부드럽게 따라 스크롤합니다. 마우스를 올려 목록을 직접 보는 동안에는 끼어들지 않습니다.
+ */
 function CommitList({ rail, activeSection, highlighted, onPick }: CommitListProps) {
+  const listRef = useRef<HTMLOListElement>(null)
+  const hovering = useRef(false)
+  const placed = useRef(false)
+
+  useEffect(() => {
+    const list = listRef.current
+    if (!list || !activeSection || hovering.current) return
+    const item = list.querySelector<HTMLElement>(`[data-section="${CSS.escape(activeSection)}"]`)
+    if (!item) return
+    const listRect = list.getBoundingClientRect()
+    const itemRect = item.getBoundingClientRect()
+    const delta = itemRect.top + itemRect.height / 2 - (listRect.top + listRect.height / 2)
+    if (Math.abs(delta) < 2) return
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+    // 처음 열릴 때는 바로 그 자리로, 그 뒤로는 부드럽게 따라갑니다
+    list.scrollBy({ top: delta, behavior: placed.current && !reduced ? 'smooth' : 'auto' })
+    placed.current = true
+  }, [activeSection])
+
   return (
-    <ol className={styles.list}>
+    <ol
+      ref={listRef}
+      className={styles.list}
+      onPointerEnter={() => {
+        hovering.current = true
+      }}
+      onPointerLeave={() => {
+        hovering.current = false
+      }}
+    >
       {rail.map((item) => (
         <li key={item.sectionId}>
           <button
             type="button"
             className={styles.item}
+            data-section={item.sectionId}
             data-status={item.status}
             data-highlighted={highlighted === item.sectionId}
             aria-current={activeSection === item.sectionId ? 'true' : undefined}

@@ -57,6 +57,10 @@ export interface TargetState {
   applied: number
   /** 지금까지 입력된 글자 수 */
   typed: number
+  /** 복제해 온 카드에 딸려 온 원래 글자. 새 글자로 고쳐 쓰기 전까지 잠시 보입니다 */
+  prior?: string
+  /** prior 글자를 지우려고 선택(강조)한 상태 */
+  selected?: boolean
 }
 
 export type LineKind = 'say' | 'work' | 'commit' | 'info'

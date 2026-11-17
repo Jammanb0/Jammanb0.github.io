@@ -11,6 +11,8 @@ interface Rect {
 }
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
+/** 손으로 옮기듯 천천히 출발해 빨라졌다가 부드럽게 멈춥니다 */
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
@@ -47,6 +49,34 @@ export class OverlayLayer {
     this.overlays.push(overlay)
     this.root?.appendChild(overlay.el)
     return overlay
+  }
+
+  /**
+   * 복제 연출용 사본. 요소를 본떠 같은 자리, 같은 크기로 선택 상자들 아래에 띄웁니다.
+   * withContent가 false면 안의 내용 없이 틀(디자인)만 본뜹니다. 화면을 읽는 프로그램은 무시하고
+   * 클릭도 받지 않습니다. 다 쓰면 remove()로 지웁니다.
+   */
+  ghost(source: HTMLElement, withContent = true): HTMLElement | null {
+    if (!this.root) return null
+    const rect = source.getBoundingClientRect()
+    const copy = source.cloneNode(withContent) as HTMLElement
+    for (const el of [copy, ...copy.querySelectorAll<HTMLElement>('[id]')]) el.removeAttribute('id')
+    copy.setAttribute('aria-hidden', 'true')
+    copy.inert = true
+    Object.assign(copy.style, {
+      position: 'absolute',
+      left: `${rect.left}px`,
+      top: `${rect.top}px`,
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+      margin: '0',
+      boxSizing: 'border-box',
+      overflow: 'hidden',
+      pointerEvents: 'none',
+      transition: 'none',
+    })
+    this.root.insertBefore(copy, this.root.firstChild)
+    return copy
   }
 
   private wake = () => {
@@ -177,7 +207,7 @@ export class WorkerOverlay {
   release() {
     this.bubble.dataset.visible = 'false'
     clearTimeout(this.hideTimer)
-    this.hideTimer = setTimeout(() => this.reset(), 260)
+    this.hideTimer = setTimeout(() => this.reset(), 180)
   }
 
   reset() {
@@ -211,7 +241,7 @@ export class WorkerOverlay {
         rect = { ...rect, w: rect.w * p, h: rect.h * p }
       }
     } else if (flying && this.from) {
-      const t = easeOut(clamp01((now - this.flyStart) / this.flyDur))
+      const t = easeInOut(clamp01((now - this.flyStart) / this.flyDur))
       rect = {
         x: lerp(this.from.x, rect.x, t),
         y: lerp(this.from.y, rect.y, t),
