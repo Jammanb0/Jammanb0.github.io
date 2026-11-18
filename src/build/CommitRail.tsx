@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef } from 'react'
 import { srOnly } from '@/styles/global.css'
 import { useBuildRail, useBuildUi, useDirector } from './hooks'
 import type { RailItem } from './types'
@@ -13,19 +13,47 @@ const STATUS_TEXT = {
 interface CommitListProps {
   rail: RailItem[]
   activeSection: string | null
-  /** 다 그린 뒤 잠시 머문 구역. 그 줄이 한 번 은은하게 빛납니다 */
-  highlighted: string | null
   onPick: (sectionId: string) => void
 }
 
 /**
- * 커밋 목록. 지금 보고 있는 구역의 줄을 강조하고, 목록이 길어 넘치면 그 줄이 목록 가운데에 오도록
- * 위아래로 부드럽게 따라 스크롤합니다. 마우스를 올려 목록을 직접 보는 동안에는 끼어들지 않습니다.
+ * 커밋 목록. 지금 보고 있는 구역의 줄 뒤로 연한 파란 띠 하나가 미끄러지듯 옮겨 가며 강조합니다
+ * (줄마다 따로 칠하지 않아 두 줄이 함께 파래지거나 깜빡이지 않습니다). 목록이 길어 넘치면 그 줄이
+ * 목록 가운데에 오도록 위아래로 부드럽게 따라 스크롤하고, 마우스를 올려 목록을 직접 보는 동안에는
+ * 끼어들지 않습니다.
  */
-function CommitList({ rail, activeSection, highlighted, onPick }: CommitListProps) {
+function CommitList({ rail, activeSection, onPick }: CommitListProps) {
   const listRef = useRef<HTMLOListElement>(null)
+  const markRef = useRef<HTMLLIElement>(null)
   const hovering = useRef(false)
   const placed = useRef(false)
+
+  // 강조 띠를 지금 줄의 자리·높이에 맞춥니다. 목록 크기가 바뀌어도 다시 맞춥니다
+  useLayoutEffect(() => {
+    const list = listRef.current
+    const mark = markRef.current
+    if (!list || !mark) return
+    const place = () => {
+      const item = activeSection
+        ? list.querySelector<HTMLElement>(`[data-section="${CSS.escape(activeSection)}"]`)
+        : null
+      mark.dataset.visible = String(Boolean(item))
+      if (!item) return
+      mark.style.transform = `translateY(${item.offsetTop}px)`
+      mark.style.height = `${item.offsetHeight}px`
+    }
+    place()
+    // 처음 자리를 잡은 다음부터 움직임을 켭니다(처음에 맨 위에서 미끄러져 내려오지 않게)
+    const frame = requestAnimationFrame(() => {
+      mark.dataset.ready = 'true'
+    })
+    const observer = new ResizeObserver(place)
+    observer.observe(list)
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+  }, [activeSection, rail])
 
   useEffect(() => {
     const list = listRef.current
@@ -53,6 +81,8 @@ function CommitList({ rail, activeSection, highlighted, onPick }: CommitListProp
         hovering.current = false
       }}
     >
+      {/* 강조 띠. 목록 안에 있어야 목록과 함께 스크롤되고, ol 안에는 li만 둘 수 있어 li로 둡니다 */}
+      <li ref={markRef} className={styles.mark} data-visible="false" aria-hidden="true" />
       {rail.map((item) => (
         <li key={item.sectionId}>
           <button
@@ -60,7 +90,6 @@ function CommitList({ rail, activeSection, highlighted, onPick }: CommitListProp
             className={styles.item}
             data-section={item.sectionId}
             data-status={item.status}
-            data-highlighted={highlighted === item.sectionId}
             aria-current={activeSection === item.sectionId ? 'true' : undefined}
             onClick={() => onPick(item.sectionId)}
           >
@@ -99,12 +128,7 @@ export function CommitRail({ className }: { className?: string }) {
   return (
     <nav className={className ? `${styles.rail} ${className}` : styles.rail} aria-label="구역 목록">
       <Head rail={rail} />
-      <CommitList
-        rail={rail}
-        activeSection={ui.activeSection}
-        highlighted={ui.highlighted}
-        onPick={director.scrollToSection}
-      />
+      <CommitList rail={rail} activeSection={ui.activeSection} onPick={director.scrollToSection} />
     </nav>
   )
 }
@@ -135,7 +159,6 @@ export function CommitPeek({ open, onToggle, onClose }: CommitPeekProps) {
           <CommitList
             rail={rail}
             activeSection={ui.activeSection}
-            highlighted={ui.highlighted}
             onPick={(sectionId) => {
               onClose()
               director.scrollToSection(sectionId)

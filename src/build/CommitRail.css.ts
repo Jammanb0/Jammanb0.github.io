@@ -1,17 +1,14 @@
 import { keyframes, style } from '@vanilla-extract/css'
 import { vars } from '@/styles/theme.css'
 
-const pulse = keyframes({
-  '0%': { boxShadow: '0 0 0 0 rgba(49, 130, 246, 0.45)' },
-  '70%': { boxShadow: '0 0 0 6px rgba(49, 130, 246, 0)' },
-  '100%': { boxShadow: '0 0 0 0 rgba(49, 130, 246, 0)' },
-})
-
-/** 다 그린 뒤 잠시 머문 구역의 줄이 한 번 은은하게 빛납니다 */
-const flash = keyframes({
-  '0%': { backgroundColor: 'rgba(49, 130, 246, 0)' },
-  '25%': { backgroundColor: 'rgba(49, 130, 246, 0.14)' },
-  '100%': { backgroundColor: 'rgba(49, 130, 246, 0)' },
+/**
+ * 조립 중인 구역의 점: 초록 고리가 숨 쉬듯 퍼집니다(완성되면 꽉 찬 초록).
+ * 파랑은 '지금 보고 있는 곳'에만 씁니다
+ */
+const growing = keyframes({
+  '0%': { boxShadow: '0 0 0 0 rgba(74, 194, 107, 0.5)' },
+  '70%': { boxShadow: '0 0 0 5px rgba(74, 194, 107, 0)' },
+  '100%': { boxShadow: '0 0 0 0 rgba(74, 194, 107, 0)' },
 })
 
 const pop = keyframes({
@@ -53,6 +50,8 @@ export const count = style({
 
 export const list = style({
   position: 'relative',
+  // 강조 띠(z-index -1)가 목록 밖으로 빠지지 않고 줄과 세로선 뒤에만 깔리게 합니다
+  isolation: 'isolate',
   overflowY: 'auto',
   minHeight: 0,
   scrollbarWidth: 'thin',
@@ -77,17 +76,39 @@ export const item = style({
   padding: `7px ${vars.space[2]} 7px 0`,
   borderRadius: vars.radius.sm,
   textAlign: 'left',
-  transition: `background-color ${vars.transition.base}`,
+  transition: `background-color ${vars.transition.fast}`,
   selectors: {
     '&:hover': {
-      backgroundColor: vars.color.gray50,
+      backgroundColor: 'rgba(15, 23, 42, 0.04)',
     },
-    // 지금 보고 있는 구역의 줄. 스크롤을 따라 이 강조가 위아래로 옮겨 갑니다
-    '&[aria-current="true"]': {
-      backgroundColor: vars.color.blue50,
+  },
+})
+
+/**
+ * 지금 보고 있는 줄 뒤에 깔리는 연한 파란 띠 하나. 줄마다 따로 칠하지 않고 이 띠가 줄 사이를
+ * 미끄러지듯 옮겨 가서, 두 줄이 함께 파래지거나 깜빡이지 않습니다(위치·높이는 CommitList가 넣음)
+ */
+export const mark = style({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  zIndex: -1,
+  borderRadius: vars.radius.sm,
+  backgroundColor: vars.color.blue50,
+  pointerEvents: 'none',
+  opacity: 0,
+  transition: 'opacity 0.2s ease',
+  selectors: {
+    '&[data-visible="true"]': {
+      opacity: 1,
     },
-    '&[data-highlighted="true"]': {
-      animation: `${flash} 1.8s ease-out`,
+    '&[data-ready="true"]': {
+      transition: [
+        'transform 0.38s cubic-bezier(0.16, 1, 0.3, 1)',
+        'height 0.38s cubic-bezier(0.16, 1, 0.3, 1)',
+        'opacity 0.2s ease',
+      ].join(', '),
     },
   },
 })
@@ -108,20 +129,25 @@ export const node = style({
     border: `2px solid ${vars.color.gray300}`,
     backgroundColor: vars.color.frame,
     boxSizing: 'border-box',
+    // 강조 띠가 미끄러져 오는 동안 점 색도 함께 서서히 바뀝니다
+    transition: 'background-color 0.3s ease, border-color 0.3s ease',
   },
   selectors: {
+    // 아직 안 만든 곳: 회색 빈 점 / 조립 중: 초록 빈 점이 숨 쉬듯 / 완성: 꽉 찬 초록
     '&[data-status="building"]::before': {
-      borderColor: vars.color.selection,
-      backgroundColor: vars.color.selection,
-      animation: `${pulse} 1.4s ease-out infinite`,
+      borderColor: vars.term.green,
+      animation: `${growing} 1.4s ease-out infinite`,
     },
     '&[data-status="done"]::before': {
       borderColor: vars.term.green,
       backgroundColor: vars.term.green,
     },
-    // 지금 보고 있는 줄의 점에는 옅은 고리를 둘러 위치를 짚어 줍니다
+    // 지금 보고 있는 줄(파란 띠가 있는 줄)의 점만 파랗게 칠하고 옅은 고리를 둘러 위치를 짚어 줍니다
     [`${item}[aria-current="true"] &::before`]: {
+      borderColor: vars.color.selection,
+      backgroundColor: vars.color.selection,
       boxShadow: '0 0 0 4px rgba(49, 130, 246, 0.2)',
+      animation: 'none',
     },
   },
 })
@@ -204,7 +230,10 @@ export const peekDots = style({
   gap: '4px',
 })
 
-/** 구역 하나에 점 하나. 지금 보는 구역은 길쭉해집니다 */
+/**
+ * 구역 하나에 점 하나. 지금 보는 구역은 길쭉한 파란 알약이 되고, 나머지는 진행 상황 색
+ * (안 만든 곳 회색, 조립 중 옅은 초록이 숨 쉬듯, 완성 초록)입니다. 큰 화면의 커밋 기록과 같은 규칙입니다
+ */
 export const peekDot = style({
   width: '7px',
   height: '7px',
@@ -213,14 +242,16 @@ export const peekDot = style({
   transition: 'width 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease',
   selectors: {
     '&[data-status="building"]': {
-      backgroundColor: vars.color.selection,
-      animation: `${pulse} 1.4s ease-out infinite`,
+      backgroundColor: 'rgba(74, 194, 107, 0.45)',
+      animation: `${growing} 1.4s ease-out infinite`,
     },
     '&[data-status="done"]': {
       backgroundColor: vars.term.green,
     },
     '&[data-current="true"]': {
       width: '16px',
+      backgroundColor: vars.color.selection,
+      animation: 'none',
     },
     '&[data-highlighted="true"]': {
       animation: `${pop} 0.6s ease-out`,
