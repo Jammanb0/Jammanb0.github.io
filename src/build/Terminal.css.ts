@@ -30,7 +30,22 @@ export const terminal = style({
   },
 })
 
-/** 작은 바에서 보여주는 마지막 한 줄 */
+/**
+ * 작은 바의 두 줄 칸: 위는 메인의 최근 말, 아래는(만드는 동안) 지금 하는 일. 색칠한 이름표가 왼쪽 초록
+ * 점에 붙어 보이지 않게 점과의 간격을 조금 더 둡니다(8px → 14px)
+ */
+export const mini = style({
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  gap: '1px',
+  flex: 1,
+  minWidth: 0,
+  marginLeft: '6px',
+  lineHeight: 1.35,
+})
+
+/** 작은 바에서 보여주는 한 줄 */
 export const lastLine = style({
   display: 'flex',
   gap: vars.space[2],
@@ -152,13 +167,71 @@ export const line = style({
 })
 
 /**
- * 안내하는 말. 빌드 도구가 단계를 알리는 줄처럼 앞에 파란 '==>'를 붙이고 굵게 써서
- * 작업 로그와 구분합니다(말풍선이 아니라 터미널 출력처럼)
+ * 메인이 하는 말. 앞에 'guhn' 이름표(speaker)를 붙이고 굵게 써서 작업 로그와 구분합니다(말풍선이 아니라
+ * 터미널 출력처럼). 이름표와 말의 글자 기준선을 맞춥니다
  */
-export const say = style({ color: vars.term.fg, fontWeight: vars.fontWeight.bold })
+export const say = style({
+  alignItems: 'baseline',
+  color: vars.term.fg,
+  fontWeight: vars.fontWeight.bold,
+})
 export const work = style({ color: vars.term.dim })
 export const commit = style({ color: vars.term.fg })
 export const info = style({ color: vars.term.dim, fontStyle: 'italic' })
+
+/** 작은 바 아래 줄(지금 하는 일)은 메인의 말보다 작고 흐리게 둡니다 */
+export const miniLive = style({ fontSize: '11px', color: vars.term.dim })
+
+/** 구역 하나(메인의 말 → 서브 에이전트 칸)는 새 단계처럼 위를 띄웁니다 */
+export const group = style({
+  marginTop: vars.space[3],
+  selectors: {
+    '&:first-child': { marginTop: 0 },
+  },
+})
+
+/** 서브 에이전트의 일이 접혀 들어가는 들여쓴 칸. 왼쪽 세로줄로 메인의 말에 딸린 일임을 보여줍니다 */
+export const block = style({
+  marginLeft: '0.45em',
+  paddingLeft: '1.05em',
+  borderLeft: `1px solid ${vars.term.line}`,
+})
+
+/** 다 만든 구역의 접힌 한 줄. 누르면 그 구역의 일을 모두 펼칩니다 */
+export const summary = style({
+  display: 'flex',
+  gap: vars.space[2],
+  width: '100%',
+  padding: 0,
+  margin: 0,
+  border: 'none',
+  borderRadius: '4px',
+  background: 'none',
+  font: 'inherit',
+  color: vars.term.fg,
+  textAlign: 'left',
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-all',
+  cursor: 'pointer',
+  transition: `background-color ${vars.transition.fast}`,
+  selectors: {
+    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
+    '&:disabled': { cursor: 'default', backgroundColor: 'transparent' },
+  },
+})
+
+export const stats = style({ color: vars.term.dim })
+
+export const fold = style({
+  flexShrink: 0,
+  width: '1em',
+  textAlign: 'center',
+  color: vars.term.dim,
+  transition: 'transform 0.2s ease',
+  selectors: {
+    '&[data-open="true"]': { transform: 'rotate(90deg)' },
+  },
+})
 
 export const mark = style({ flexShrink: 0, width: '1.2em' })
 /** 작업 로그 앞에 붙는 작업자 역할 이름(레이아웃·스타일·텍스트·배치) */
@@ -169,13 +242,26 @@ export const roleTag = style({
   whiteSpace: 'nowrap',
 })
 export const detail = style({ color: vars.term.dim })
-export const markSay = style({
-  width: 'auto',
-  color: vars.term.blue,
+/**
+ * 메인의 말 앞에 붙는 이름표('guhn'). 맥 터미널에서 많이 쓰는 zsh 테마(agnoster·powerlevel10k)의
+ * 프롬프트처럼 바탕색을 칠한 칸의 오른쪽 끝을 화살표로 깎은 모양이라, 이모지 없이도 작업 로그 사이에서
+ * 확 눈에 띕니다. 줄은 글자 기준선으로 맞춰서(say의 alignItems) 이름표 글자와 뒤따르는 말의 높이가 어긋나지 않습니다
+ */
+export const speaker = style({
+  flexShrink: 0,
+  // 기준선을 맞추면 칸이 글자 줄보다 1px쯤 아래로 치우쳐 보여서(글꼴의 아래쪽 여백 때문) 그만큼 올립니다
+  position: 'relative',
+  top: '-0.08em',
+  // 오른쪽 여백에 화살표 끝(0.5em)이 들어갑니다
+  padding: '0 0.95em 0 0.55em',
+  borderRadius: '3px 0 0 3px',
+  backgroundColor: vars.term.blue,
+  color: vars.term.bg,
+  fontSize: '0.92em',
   fontWeight: vars.fontWeight.bold,
-  // 합자 글꼴(Cascadia Code 등)에서 '==>'가 화살표 하나로 합쳐지지 않게 합니다
-  fontVariantLigatures: 'none',
+  lineHeight: 1.6,
   whiteSpace: 'nowrap',
+  clipPath: 'polygon(0 0, calc(100% - 0.5em) 0, 100% 50%, calc(100% - 0.5em) 100%, 0 100%)',
 })
 export const markCommit = style({ color: vars.term.green })
 export const content = style({ flex: 1, minWidth: 0 })
@@ -211,6 +297,20 @@ globalStyle(`${body} ${say}`, {
 })
 
 globalStyle(`${body} ${say}:first-child`, {
+  marginTop: 0,
+})
+
+/** 한 줄로만 보이는 줄(지금 하는 일). 넘치면 말줄임표로 자릅니다 */
+export const single = style({ whiteSpace: 'pre', wordBreak: 'normal' })
+
+globalStyle(`${single} ${content}`, {
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'pre',
+})
+
+// 구역 안의 말은 구역이 이미 위를 띄우므로 따로 띄우지 않습니다
+globalStyle(`${group} ${say}`, {
   marginTop: 0,
 })
 
