@@ -54,7 +54,14 @@ export default function Contact() {
         >
           <FrameLabel text="연락처" />
           <BuildBox id="contact-frame" name=".contact" decls={FRAME} className={styles.frame}>
-            <BuildText id="contact-title" as="h1" text="연락처" className={styles.title} />
+            {/* 큰 제목은 작게 써 두고 모서리를 끌어 키웁니다(페이지마다 방법이 다름) */}
+            <BuildText
+              id="contact-title"
+              as="h1"
+              text="연락처"
+              compose="grow"
+              className={styles.title}
+            />
             <BuildText
               id="contact-lead"
               text="아래 채널에서 작업을 더 보거나 연락할 수 있어요."

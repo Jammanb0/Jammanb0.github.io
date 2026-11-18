@@ -151,7 +151,15 @@ export default function Projects() {
         >
           <FrameLabel text="프로젝트" />
           <BuildBox id="projects-head-frame" name=".projects" decls={FRAME} className={styles.head}>
-            <BuildText id="projects-title" as="h1" text="프로젝트" className={styles.title} />
+            {/* 큰 제목은 'Project'라고 썼다가 지우고 '프로젝트'로 고쳐 씁니다(페이지마다 방법이 다름) */}
+            <BuildText
+              id="projects-title"
+              as="h1"
+              text="프로젝트"
+              compose="rewrite"
+              draft="Project"
+              className={styles.title}
+            />
             <BuildText
               id="projects-lead"
               text={`지금까지 만든 프로젝트 ${projects.length}개를 시작한 연도별로 모았습니다.`}

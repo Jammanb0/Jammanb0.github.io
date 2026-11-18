@@ -22,9 +22,22 @@ export const box = style({
   opacity: 0,
   transition: 'opacity 0.16s ease',
   willChange: 'transform, width, height',
+  // 붙여넣기 직후 상자 안을 역할 색으로 잠깐 칠하는 바탕(flash)
+  '::before': {
+    content: '""',
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: roleColor,
+    opacity: 0,
+    transition: 'opacity 0.55s ease',
+  },
   selectors: {
     '&[data-visible="true"]': {
       opacity: 1,
+    },
+    '&[data-flash="true"]::before': {
+      opacity: 0.16,
+      transition: 'none',
     },
   },
 })

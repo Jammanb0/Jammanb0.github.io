@@ -1,7 +1,16 @@
 import { useCallback, useContext, useSyncExternalStore } from 'react'
 import { DirectorContext, SectionContext } from './context'
 import { DONE } from './director'
-import type { BuildUi, Decl, RailItem, Role, RunContext, SectionStatus, TargetKind } from './types'
+import type {
+  BuildUi,
+  Decl,
+  RailItem,
+  Role,
+  RunContext,
+  SectionStatus,
+  TargetKind,
+  TextCompose,
+} from './types'
 
 const noopSubscribe = () => () => {}
 const EMPTY: never[] = []
@@ -35,18 +44,42 @@ interface TargetOptions {
   run?: (ctx: RunContext) => Promise<void>
   /** 바뀌지 않게 모듈 상수로 넘겨주세요 */
   workers?: readonly Role[]
+  compose?: TextCompose
+  draft?: string
 }
 
-export function useBuildTarget({ id, kind, name, decls, text, run, workers }: TargetOptions) {
+export function useBuildTarget({
+  id,
+  kind,
+  name,
+  decls,
+  text,
+  run,
+  workers,
+  compose,
+  draft,
+}: TargetOptions) {
   const director = useDirector()
   const sectionId = useContext(SectionContext)
 
   const ref = useCallback(
     (el: HTMLElement | null) => {
       if (!el || !director || !sectionId) return
-      return director.registerTarget({ id, kind, name, decls, text, run, workers, el, sectionId })
+      return director.registerTarget({
+        id,
+        kind,
+        name,
+        decls,
+        text,
+        run,
+        workers,
+        compose,
+        draft,
+        el,
+        sectionId,
+      })
     },
-    [director, sectionId, id, kind, name, decls, text, run, workers],
+    [director, sectionId, id, kind, name, decls, text, run, workers, compose, draft],
   )
 
   const state = useSyncExternalStore(director?.subscribe ?? noopSubscribe, () =>

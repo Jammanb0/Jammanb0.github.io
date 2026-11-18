@@ -16,6 +16,18 @@ export interface RunContext {
   wait: (ms: number) => Promise<void>
 }
 
+/**
+ * 글자를 만드는 방법. 정하지 않으면 감독이 그때그때 고르되 바로 앞에 쓴 방법은 피합니다.
+ * - type: 제자리에서 입력
+ * - aside: 옆 빈자리에 글상자를 만들어 쓴 뒤 끌어다 놓기
+ * - box: 글상자를 끌어 그린 뒤 그 안에 입력
+ * - grow: 작게 써 두고 모서리를 끌어 키우기
+ * - menu: 머리글 메뉴의 같은 글자를 복사해 와 키우기(메뉴가 안 보이면 grow)
+ * - paste: 한 번에 붙여넣기
+ * - rewrite: 초안(draft)을 먼저 썼다가 한 글자씩 지우고 진짜 글자로 다시 쓰기(draft가 없으면 type)
+ */
+export type TextCompose = 'type' | 'aside' | 'box' | 'grow' | 'menu' | 'paste' | 'rewrite'
+
 export interface TargetSpec {
   id: string
   sectionId: string
@@ -26,6 +38,10 @@ export interface TargetSpec {
   decls?: readonly Decl[]
   /** text 대상의 전체 글자 */
   text?: string
+  /** text 대상을 만드는 방법. 페이지의 큰 제목처럼 정해 둘 때만 줍니다 */
+  compose?: TextCompose
+  /** compose가 rewrite일 때 먼저 썼다가 지울 초안. 예: 'Project' → '프로젝트' */
+  draft?: string
   /** custom 대상의 등장 연출 */
   run?: (ctx: RunContext) => Promise<void>
   /**
@@ -63,6 +79,10 @@ export interface TargetState {
   selected?: boolean
 }
 
+/**
+ * 터미널 줄 종류. say: 메인이 하는 말('guhn' 이름표) / work: 서브 에이전트가 한 일 /
+ * commit: 구역을 다 만든 기록 / info: 그 밖의 알림
+ */
 export type LineKind = 'say' | 'work' | 'commit' | 'info'
 
 export interface TerminalLine {
@@ -75,6 +95,13 @@ export interface TerminalLine {
   meta?: string
   /** work 줄을 남긴 작업자 역할 */
   role?: Role
+  /**
+   * 어느 구역의 줄인지. 터미널은 구역마다 메인의 말 아래에 서브 에이전트의 일을 접어 넣어
+   * 보여줍니다. 구역에 묶이지 않은 줄(끝 인사 등)은 없습니다
+   */
+  sectionId?: string
+  /** commit 줄: 그 구역을 만드는 데 걸린 시간(ms). 조립 없이 바로 완성된 구역은 없습니다 */
+  took?: number
 }
 
 export interface RailItem {

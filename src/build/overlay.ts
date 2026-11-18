@@ -1,4 +1,5 @@
 import { setElementVars } from '@vanilla-extract/dynamic'
+import { vars } from '@/styles/theme.css'
 import { ROLES } from './roles'
 import type { Role } from './types'
 import * as styles from './overlay.css'
@@ -79,6 +80,45 @@ export class OverlayLayer {
     return copy
   }
 
+  /**
+   * 글자 사본. 요소 안의 글자를 같은 글꼴·크기·굵기·색으로 본떠 그 글자 자리에 띄웁니다(바탕·여백 없이
+   * 글자만). 다른 곳의 글자를 복사해 와 옮기는 연출에 씁니다. 다 쓰면 remove()로 지웁니다.
+   */
+  ghostText(source: HTMLElement, text: string): HTMLElement | null {
+    if (!this.root) return null
+    const range = document.createRange()
+    range.selectNodeContents(source)
+    const rect = range.getBoundingClientRect()
+    const style = getComputedStyle(source)
+    const copy = document.createElement('span')
+    copy.textContent = text
+    copy.setAttribute('aria-hidden', 'true')
+    Object.assign(copy.style, {
+      position: 'absolute',
+      left: `${rect.left}px`,
+      top: `${rect.top}px`,
+      margin: '0',
+      fontFamily: style.fontFamily,
+      fontSize: style.fontSize,
+      fontWeight: style.fontWeight,
+      letterSpacing: style.letterSpacing,
+      lineHeight: `${rect.height}px`,
+      color: style.color,
+      whiteSpace: 'nowrap',
+      transformOrigin: '0 0',
+      pointerEvents: 'none',
+    })
+    this.root.insertBefore(copy, this.root.firstChild)
+    return copy
+  }
+
+  /**
+   * 머리글 위에서 하는 일(메뉴 글자 복사)이 머리글에 가려지지 않게, 그동안만 이 층을 머리글보다 위로 올립니다
+   */
+  lift(on: boolean) {
+    if (this.root) this.root.style.zIndex = on ? `calc(${vars.zIndex.header} + 1)` : ''
+  }
+
   private wake = () => {
     if (!this.raf && this.root) this.raf = requestAnimationFrame(this.loop)
   }
@@ -109,6 +149,7 @@ export class WorkerOverlay {
   private drawStart = 0
   private drawDur = 0
   private hideTimer: ReturnType<typeof setTimeout> | undefined
+  private flashTimer: ReturnType<typeof setTimeout> | undefined
   private wake: () => void
 
   constructor(role: Role, wake: () => void) {
@@ -198,6 +239,15 @@ export class WorkerOverlay {
     this.bubble.dataset.visible = 'true'
   }
 
+  /** 붙여넣은 직후처럼 상자 안을 역할 색으로 잠깐 칠했다가 서서히 걷어 냅니다 */
+  flash() {
+    clearTimeout(this.flashTimer)
+    this.el.dataset.flash = 'true'
+    this.flashTimer = setTimeout(() => {
+      this.el.dataset.flash = 'false'
+    }, 140)
+  }
+
   /** 지금 상자가 있는 자리(화면 좌표). 보이지 않으면 null */
   get current(): Rect | null {
     return this.shown ? this.rect : null
@@ -212,6 +262,8 @@ export class WorkerOverlay {
 
   reset() {
     clearTimeout(this.hideTimer)
+    clearTimeout(this.flashTimer)
+    this.el.dataset.flash = 'false'
     this.shown = false
     this.target = null
     this.rect = null

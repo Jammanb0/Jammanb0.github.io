@@ -11,9 +11,11 @@ import type {
   TargetSpec,
   TargetState,
   TerminalLine,
+  TextCompose,
 } from './types'
 
-const MAX_LINES = 240
+/** 터미널에 남겨 두는 줄 수. 서브 에이전트의 일은 구역마다 접혀 보이니 넉넉히 둡니다 */
+const MAX_LINES = 600
 /** 구역 윗부분이 화면 위에서 이 비율(55%)까지 올라오면 조립을 시작합니다 */
 const TRIGGER_LINE = 0.55
 /** 기본 빠르기. 1보다 크면 모든 동작이 그만큼 느려집니다 */
@@ -41,15 +43,22 @@ const SHOW_SPEED = 1.5
 const REFERENCE_HEIGHT = 900
 /**
  * 구역 안에서도 화면 위에서 이 높이(88%)까지 들어온 대상만 작업합니다. 아직 안 보이는 아래쪽은
- * 기다리고, 화면 밖으로 나간 일은 멈췄다가 다시 보이면 이어서 합니다. 그래서 스크롤을 따라 그려집니다
+ * 기다리고(위로 되돌아가 아래로 벗어난 일은 멈췄다가 다시 보이면 이어서 합니다), 위로 지나간 일은
+ * 보이지 않는 자리에서 바로 완성합니다(settlePassed). 그래서 스크롤을 따라 그려집니다
  */
 const VIEW_LINE = 0.88
 /** '지금 보고 있는 구역'을 고르는 시선 선. 화면 위에서 40% 높이 */
 const FOCUS_LINE = 0.4
+/** 보고 있는 구역을 바꾸려면 새 구역이 이만큼(px) 더 가까워야 합니다. 경계에서 강조가 오가지 않게 */
+const ACTIVE_MARGIN = 24
 /** 복제할 때 원본과 목적지의 높이 차이가 이 비율 안이면 내용까지, 넘으면 틀만 복사합니다 */
 const SAME_SIZE = 0.25
 /** 손으로 끄는 움직임: 천천히 출발해 빨라졌다가 부드럽게 내려놓습니다 */
 const DRAG_EASING = 'cubic-bezier(0.45, 0, 0.2, 1)'
+/** 틀을 끌어 그릴 때(선택 상자의 easeOut과 같은 곡선) */
+const DRAW_EASING = 'cubic-bezier(0.33, 1, 0.68, 1)'
+/** 같은 연출이 연달아 나오지 않게 기억해 두는 최근 연출 수 */
+const RECENT_EFFECTS = 2
 /** 역할별 작업자 수 */
 const CREW = new Map<Role, number>()
 for (const role of WORKER_ROLES) CREW.set(role, (CREW.get(role) ?? 0) + 1)
@@ -116,6 +125,19 @@ SETTLED.hurry()
 
 type Action = 'draw' | 'style' | 'type' | 'reveal' | 'custom'
 
+/**
+ * 블록을 놓는 방법. carry: 작업자 쪽에서 들고 와 내려놓기 / unroll: 틀을 끌어 그리면 그 안에서 내용이
+ * 드러나기 / paste: 붙여넣기 / stack: 목록 항목을 하나씩 차례로 놓기 / photo: 사진을 작게 집어 와
+ * 모서리로 키우기 / duplicate: 위 블록을 복제해 끌어온 뒤 내용 바꾸기
+ */
+type RevealEffect = 'carry' | 'unroll' | 'paste' | 'stack' | 'photo' | 'duplicate'
+
+/** 연출을 고를 때 서로 견주는 갈래. 제목은 제목끼리, 블록은 블록끼리 되풀이를 피합니다 */
+type EffectFamily = 'heading' | 'block'
+
+/** 천천히 출발해 빨라졌다가 부드럽게 멈춥니다 */
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+
 interface Task {
   key: string
   target: TargetSpec
@@ -149,12 +171,13 @@ function estimate(task: Task, hint: { copies: boolean; edits: boolean }) {
       const length = task.target.text?.length ?? 0
       const typing = Math.min(24 * length, Math.max(400, 1.2 * length))
       if (hint.edits) return 580 + typing + gap
-      // 짧은 제목은 열에 여섯쯤 옆에서 쓰고 끌어다 놓습니다
+      // 짧은 제목은 옆에서 써서 끌어 놓기·글상자·키우기처럼 손이 더 가는 방법으로 만드는 일이 많습니다
       const heading = /^H[1-4]$/.test(task.target.el.tagName) && length <= 40
-      return typing + (heading ? 470 : 0) + gap
+      return typing + (heading ? 520 : 0) + gap
     }
     case 'reveal':
-      return (task.target.el.querySelector('img') ? 920 : 540) + gap
+      // 사진은 끌어와 키우기, 그 밖은 옮겨 놓기·틀째로 펼치기·붙여넣기·차례로 놓기·복제 가운데 하나
+      return (task.target.el.querySelector('img') ? 920 : 620) + gap
     case 'custom':
       return 700 + gap
   }
@@ -195,6 +218,8 @@ export class BuildDirector {
   private requested = new Set<string>()
   private visibleRatio = new Map<string, number>()
   private committed = new Set<string>()
+  /** 조립을 시작한(할 일이 있었던) 구역과 그 시각. 다 만든 기록에 걸린 시간을 적을 때 씁니다 */
+  private startedAt = new Map<string, number>()
   private tokens = new Map<string, RunToken>()
   private tasks: Task[] = []
   private taskSeq = 0
@@ -224,6 +249,12 @@ export class BuildDirector {
   private commitsQueued = false
   /** 복제해 끌어오는 동안 띄운 사본들. 페이지를 떠나면 모두 지웁니다 */
   private ghosts = new Set<HTMLElement>()
+  /** 갈래별로 최근에 쓴 연출. 바로 앞과 같은 움직임이 되풀이되지 않게 고를 때 피합니다 */
+  private recentEffects: Record<EffectFamily, string[]> = { heading: [], block: [] }
+  /** 긴 글을 마지막으로 만든 방법 */
+  private lastProse: TextCompose = 'type'
+  /** 옆에 써서 끌어 놓을 때 마지막으로 쓴 방향 */
+  private lastAside = ''
 
   constructor() {
     const reducedMotion =
@@ -402,7 +433,9 @@ export class BuildDirector {
       this.scrollFrame = 0
       this.updateActive()
       if (this.atBottom()) this.requestVisible()
+      // pump도 처음에 지나간 것을 완성하니, 조립 중이 아닐 때만 따로 부릅니다
       if (this.ui.busy) this.pump()
+      else this.settlePassed()
     })
   }
 
@@ -434,6 +467,7 @@ export class BuildDirector {
     const bottom = this.atBottom()
     let best: string | null = null
     let bestDistance = Number.POSITIVE_INFINITY
+    let currentDistance = Number.POSITIVE_INFINITY
     for (const spec of this.orderedSections()) {
       if (!spec.commit) continue
       const rect = spec.el.getBoundingClientRect()
@@ -446,11 +480,15 @@ export class BuildDirector {
         rect.top <= focus && rect.bottom >= focus
           ? 0
           : Math.min(Math.abs(rect.top - focus), Math.abs(rect.bottom - focus))
+      if (spec.id === this.ui.activeSection) currentDistance = distance
       if (distance < bestDistance) {
         best = spec.id
         bestDistance = distance
       }
     }
+    // 두 구역 사이 경계에서 스크롤이 조금씩 흔들려도 강조가 오가지 않도록, 새 구역이 지금 구역보다
+    // 확실히(ACTIVE_MARGIN 넘게) 가까워졌을 때만 바꿉니다
+    if (!bottom && currentDistance <= bestDistance + ACTIVE_MARGIN) best = this.ui.activeSection
     if (best !== this.ui.activeSection) {
       this.setUi({ activeSection: best })
       this.scheduleHighlight()
@@ -471,8 +509,9 @@ export class BuildDirector {
   }
 
   /**
-   * 화면 중간(TRIGGER_LINE)까지 올라온 구역의 조립을 시작합니다. 화면 밖으로 나간 구역도 완성해
-   * 버리지 않고 하던 데서 멈춰 두었다가, 다시 보이면 이어서 그립니다(빨리 지나친 구역도 마찬가지).
+   * 화면 중간(TRIGGER_LINE)까지 올라온 구역의 조립을 시작합니다. 위로 되돌아가 아래로 벗어난 구역은
+   * 완성해 버리지 않고 하던 데서 멈춰 두었다가, 다시 보이면 이어서 그립니다. 위로 지나간 구역은
+   * settlePassed가 완성합니다.
    */
   private requestVisible() {
     if (this.ui.mode !== 'live' || this.attached === 0) return
@@ -498,12 +537,16 @@ export class BuildDirector {
     const token = new RunToken()
     this.tokens.set(spec.id, token)
     this.setStatus(spec.id, 'building')
-    // 안내 문장은 한 줄씩 차례로 찍지만, 조립은 기다리지 않고 바로 시작합니다
+    // 안내 문장은 한 줄씩 차례로 찍지만, 조립은 기다리지 않고 바로 시작합니다. 터미널은 구역마다
+    // 메인의 말 → 서브 에이전트의 일 순서로 묶어 보여주므로 말이 늦게 찍혀도 제자리에 들어갑니다
     if (spec.guide) {
       const text = spec.guide
-      this.narrator = this.narrator.then(() => (token.hurried ? undefined : this.say(text, token)))
+      this.narrator = this.narrator.then(() =>
+        token.hurried ? undefined : this.say(text, token, spec.id),
+      )
     }
     this.enqueueTasks(spec)
+    if (this.status.get(spec.id) === 'building') this.startedAt.set(spec.id, performance.now())
     this.pump()
   }
 
@@ -559,9 +602,40 @@ export class BuildDirector {
     this.tasks.push(...created)
   }
 
-  /** 쉬고 있는 작업자에게 할 수 있는 일을 나눠 줍니다 */
+  /**
+   * 화면 위로 지나간 것은 그 자리에서 완성합니다. 빨리 내리느라 작업자가 손대기 전에 지나친 부분이
+   * 빈 채로 남아 그 구역이 커밋 기록에서 계속 '조립 중'으로 남거나, 끝으로 바로 건너뛰어 한 번도 시작하지
+   * 못한 구역이 '안 만든 곳'으로 남지 않게 합니다. 화면 위쪽 바깥(bottom ≤ 0)이라 뚝 나타나는 모습은
+   * 보이지 않습니다. 안쪽 대상은 바깥 틀이 끝난 뒤에만 완성해서 빈 틀 안에 글자만 뜨지 않게 합니다.
+   */
+  private settlePassed() {
+    if (this.ui.mode !== 'live' || this.attached === 0) return
+    const touched = new Set<string>()
+    this.batch(() => {
+      for (const spec of this.orderedSections()) {
+        if (this.status.get(spec.id) !== 'pending') continue
+        if (spec.el.getBoundingClientRect().bottom <= 0) this.finishSection(spec.id)
+      }
+      // 일 목록은 문서 순서(바깥 틀이 먼저)라, 앞에서 완성한 틀 덕분에 안쪽 대상도 같은 차례에 완성됩니다
+      for (const task of this.tasks) {
+        if (task.active || task.done || task.cancelled) continue
+        if (this.status.get(task.sectionId) !== 'building') continue
+        if (task.target.el.getBoundingClientRect().bottom > 0) continue
+        if (!task.deps.every((key) => this.isDone(key))) continue
+        task.done = true
+        this.setTarget(task.target.id, DONE)
+        touched.add(task.sectionId)
+      }
+      for (const id of touched) {
+        if (!this.tasks.some((task) => task.sectionId === id && !task.done)) this.finishSection(id)
+      }
+    })
+  }
+
+  /** 쉬고 있는 작업자에게 할 수 있는 일을 나눠 줍니다. 그 전에 위로 지나간 것부터 완성합니다 */
   private pump = () => {
     if (this.attached === 0) return
+    this.settlePassed()
     const view = this.survey()
     for (const worker of this.workers) {
       if (worker.busy) continue
@@ -828,17 +902,20 @@ export class BuildDirector {
       await this.tween(this.show(680), token, (t) => {
         const a = source.el.getBoundingClientRect()
         const b = target.el.getBoundingClientRect()
-        const k = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+        const k = easeInOut(t)
         ghost.style.left = `${a.left + (b.left - a.left) * k}px`
         ghost.style.top = `${a.top + (b.top - a.top) * k}px`
         ghost.style.width = `${a.width + (b.width - a.width) * k}px`
         ghost.style.height = `${a.height + (b.height - a.height) * k}px`
+        // 사본을 옮긴 바로 그 프레임에 선택 상자도 맞춰서, 빠르게 끌 때 상자가 한 프레임 뒤처지지 않게 합니다
+        overlay.render(performance.now())
       })
       if (!alive()) return
       this.adoptCopy(target, source, withContent)
       overlay.select(target.el, 0)
       overlay.note(null)
       this.work(
+        target,
         'layout',
         `${labelOf(target)}  ${withContent ? '⌥ 복제 → 끌어와 놓기' : '⌥ 틀만 복제 → 끌어와 크기 맞춤'}`,
       )
@@ -851,20 +928,651 @@ export class BuildDirector {
     }
   }
 
+  // ── 연출 고르기 ─────────────────────────────────────────
+
   /**
-   * 제목처럼 짧은 글자는 옆 빈자리에 글상자를 만들어 쓴 뒤 제자리로 끌어다 놓습니다.
-   * 절반 남짓의 제목에서만, 화면 안에 옮겨 둘 자리가 있을 때 합니다.
+   * 여러 방법 가운데 무게대로 하나를 고르되, 같은 갈래(제목끼리, 블록끼리)에서 최근에 쓴 방법은 되도록
+   * 피합니다. 같은 움직임이 되풀이되면 사람이 도구를 바꿔 가며 디자인하는 느낌이 떨어지기 때문입니다
+   */
+  private pickEffect<T extends string>(
+    family: EffectFamily,
+    options: ReadonlyArray<readonly [T, number]>,
+  ): T {
+    const recent = this.recentEffects[family]
+    const fresh = options.filter(([name]) => !recent.includes(name))
+    const pool = fresh.length > 0 ? fresh : options
+    let roll = Math.random() * pool.reduce((sum, [, weight]) => sum + weight, 0)
+    for (const [name, weight] of pool) {
+      roll -= weight
+      if (roll <= 0) return this.noteEffect(family, name)
+    }
+    return this.noteEffect(family, pool[pool.length - 1][0])
+  }
+
+  private noteEffect<T extends string>(family: EffectFamily, name: T): T {
+    this.recentEffects[family] = [name, ...this.recentEffects[family]].slice(0, RECENT_EFFECTS)
+    return name
+  }
+
+  /**
+   * 글자를 만드는 방법. 정해 둔 방법(페이지의 큰 제목)이 있으면 그대로, 없으면 제목은 여러 방법 가운데
+   * 앞의 제목들과 다르게 고릅니다. 긴 글은 대부분 제자리에서 입력하고 가끔 글상자·붙여넣기를 섞으며,
+   * 이름표·날짜 같은 짧은 글자는 늘 제자리에서 입력합니다
+   */
+  private textEffect(target: TargetSpec): TextCompose {
+    const length = target.text?.length ?? 0
+    if (target.compose === 'menu') {
+      return this.noteEffect('heading', this.menuSource(target) ? 'menu' : 'grow')
+    }
+    if (target.compose === 'rewrite') {
+      return this.noteEffect('heading', target.draft ? 'rewrite' : 'type')
+    }
+    if (target.compose) return this.noteEffect('heading', target.compose)
+    if (/^H[1-4]$/.test(target.el.tagName) && length <= 40) {
+      return this.pickEffect<TextCompose>('heading', [
+        ['aside', 3],
+        ['box', 2],
+        ['type', 2],
+        ['grow', 1.5],
+        ['paste', 1],
+      ])
+    }
+    if (length > 40) {
+      const roll = Math.random()
+      const pick: TextCompose = roll < 0.18 ? 'box' : roll < 0.3 ? 'paste' : 'type'
+      // 글상자·붙여넣기는 연달아 나오지 않게 합니다(입력은 기본이라 이어져도 괜찮습니다)
+      this.lastProse = pick !== 'type' && pick === this.lastProse ? 'type' : pick
+      return this.lastProse
+    }
+    return 'type'
+  }
+
+  /** 블록을 놓는 방법. 사진·목록·코드나 표·그 밖의 블록마다 어울리는 방법들 가운데 고릅니다 */
+  private revealEffect(target: TargetSpec): RevealEffect {
+    const el = target.el
+    if (el.querySelector('img')) {
+      return this.pickEffect<RevealEffect>('block', [
+        ['photo', 3],
+        ['unroll', 1.5],
+      ])
+    }
+    if (el.matches('ul, ol') && this.listItems(el).length >= 2) {
+      return this.pickEffect<RevealEffect>('block', [
+        ['stack', 3],
+        ['carry', 1.5],
+        ['unroll', 1],
+        ['paste', 1],
+      ])
+    }
+    if (el.matches('pre, table') || el.querySelector('pre, table, iframe')) {
+      return this.pickEffect<RevealEffect>('block', [
+        ['unroll', 2.5],
+        ['carry', 1.5],
+        ['paste', 1],
+      ])
+    }
+    const options: Array<readonly [RevealEffect, number]> = [
+      ['carry', 2.5],
+      ['unroll', 2],
+      ['paste', 1.5],
+    ]
+    if (this.duplicateBlock(target)) options.push(['duplicate', 2.5])
+    return this.pickEffect('block', options)
+  }
+
+  private listItems(el: HTMLElement) {
+    return [...el.children].filter(
+      (child): child is HTMLElement => child instanceof HTMLElement && child.tagName === 'LI',
+    )
+  }
+
+  /**
+   * 위에서 복제해 올 블록. 몇 칸 위까지(제목 하나쯤 건너서도) 가장 가까운 같은 종류의 블록을 찾고,
+   * 그 블록이 다 놓여 있고 화면에 보이고 폭이 같을 때만 씁니다(본문 문단처럼 같은 꼴이 되풀이되는 곳)
+   */
+  private duplicateBlock(target: TargetSpec) {
+    let prev = target.el.previousElementSibling
+    for (let hops = 0; prev && hops < 4; hops += 1, prev = prev.previousElementSibling) {
+      if (!(prev instanceof HTMLElement) || prev.tagName !== target.el.tagName) continue
+      const spec = this.byEl.get(prev)
+      if (!spec || spec.kind !== 'reveal') return undefined
+      if (!this.getTargetState(spec.id, spec.sectionId).visible || !this.subtreeDone(prev)) {
+        return undefined
+      }
+      const a = prev.getBoundingClientRect()
+      const b = target.el.getBoundingClientRect()
+      if (a.bottom < 60 || a.top > window.innerHeight) return undefined
+      return Math.abs(a.width - b.width) <= 2 ? spec : undefined
+    }
+    return undefined
+  }
+
+  /**
+   * 머리글 메뉴에서 이 제목과 같은 글자. 메뉴가 안 보이거나 아직 조립 중이면(글자가 덜 쓰였으면) 없습니다
+   */
+  private menuSource(target: TargetSpec) {
+    const text = (target.text ?? '').trim()
+    if (!text) return null
+    for (const link of document.querySelectorAll<HTMLElement>('header nav a')) {
+      if (link.textContent?.trim() !== text) continue
+      if (link.querySelector('[data-bt-visible="false"]')) return null
+      if (getComputedStyle(link).visibility === 'hidden') return null
+      const rect = link.getBoundingClientRect()
+      return rect.width > 0 && rect.bottom > 0 ? link : null
+    }
+    return null
+  }
+
+  /** 글자가 실제로 차지하는 자리. 아직 안 쓴 글자도 투명하게 자리를 잡고 있어 미리 잴 수 있습니다 */
+  private glyphRect(el: HTMLElement) {
+    const shown = el.querySelector<HTMLElement>(':scope > [aria-hidden="true"]')
+    const range = document.createRange()
+    range.selectNodeContents(shown ?? el)
+    const rect = range.getBoundingClientRect()
+    return rect.width > 0 && rect.height > 0 ? rect : el.getBoundingClientRect()
+  }
+
+  /**
+   * 옆에 써 둘 자리. 글자가 실제로 차지하는 폭을 기준으로 화면 안에 들어오는 방향(오른쪽·왼쪽·아래·위)
+   * 가운데 고르고, 거리와 비껴 가는 정도도 그때그때 달리합니다. 바로 앞과 같은 방향은 피합니다
    */
   private asideOffset(target: TargetSpec) {
-    const text = target.text ?? ''
-    if (!/^H[1-4]$/.test(target.el.tagName) || text.length > 40 || Math.random() < 0.4) return null
-    const rect = target.el.getBoundingClientRect()
+    const rect = this.glyphRect(target.el)
     const vw = document.documentElement.clientWidth
-    const reach = 70 + Math.random() * 60
-    const dy = 16 + Math.random() * 24
-    if (rect.right + reach < vw - 12) return { dx: reach, dy }
-    if (rect.left - reach > 12) return { dx: -reach, dy }
-    return { dx: 0, dy: 36 + Math.random() * 20 }
+    const vh = window.innerHeight
+    const reach = 60 + Math.random() * 90
+    const drift = (Math.random() < 0.5 ? -1 : 1) * (8 + Math.random() * 20)
+    const rise = 28 + Math.random() * 26
+    const options: Array<readonly [string, number, { dx: number; dy: number }]> = []
+    if (rect.right + reach < vw - 12) options.push(['right', 3, { dx: reach, dy: drift }])
+    if (rect.left - reach > 12) options.push(['left', 2, { dx: -reach, dy: drift }])
+    if (rect.bottom + rise < vh - 16) options.push(['below', 2, { dx: drift * 2, dy: rise }])
+    if (rect.top - rise > 72) options.push(['above', 1.5, { dx: drift * 2, dy: -rise }])
+    if (options.length === 0) return { dx: 0, dy: rise }
+    const fresh = options.filter(([name]) => name !== this.lastAside)
+    const pool = fresh.length > 0 ? fresh : options
+    let roll = Math.random() * pool.reduce((sum, [, weight]) => sum + weight, 0)
+    let picked = pool[pool.length - 1]
+    for (const option of pool) {
+      roll -= option[1]
+      if (roll <= 0) {
+        picked = option
+        break
+      }
+    }
+    this.lastAside = picked[0]
+    return picked[2]
+  }
+
+  // ── 글자 만들기 ─────────────────────────────────────────
+
+  /** 글자 하나를 고른 방법대로 만듭니다 */
+  private async composeText(
+    worker: Worker,
+    target: TargetSpec,
+    effect: TextCompose,
+    perChar: number,
+    token: RunToken,
+    alive: () => boolean,
+  ) {
+    const overlay = worker.overlay
+    const label = labelOf(target)
+    const text = target.text ?? ''
+    switch (effect) {
+      case 'aside':
+        return this.writeAside(worker, target, perChar, token, alive)
+      case 'grow':
+        return this.growText(worker, target, perChar, token, alive)
+      case 'menu':
+        return this.copyFromMenu(worker, target, perChar, token, alive)
+      case 'rewrite':
+        return this.rewriteText(worker, target, token, alive)
+      case 'box': {
+        // 글상자 도구로 자리를 끌어 그린 뒤 그 안에 입력합니다
+        await overlay.draw(target.el, this.ms(220), this.show(380), (ms) => token.sleep(ms))
+        if (!alive()) return
+        this.work(target, 'copy', `${label}  글상자 → ${snippet(text)}`)
+        await this.typeInto(target.id, text.length, perChar, token, alive)
+        return
+      }
+      case 'paste': {
+        overlay.select(target.el, this.ms(240))
+        await token.sleep(this.ms(160))
+        if (!alive()) return
+        // 붙여넣은 직후처럼 글자 전체가 잠깐 선택된 채로 보였다가 풀립니다
+        this.setTarget(target.id, {
+          visible: true,
+          applied: 0,
+          typed: 0,
+          prior: text,
+          selected: true,
+        })
+        this.work(target, 'copy', `${label}  ⌘V ${snippet(text)}`)
+        await token.sleep(this.show(420))
+        if (alive()) this.setTarget(target.id, DONE)
+        return
+      }
+      default:
+        overlay.select(target.el, this.ms(240))
+        this.work(target, 'copy', `${label}  ${snippet(text)}`)
+        await this.typeInto(target.id, text.length, perChar, token, alive)
+    }
+  }
+
+  /** 옆 빈자리에 글상자를 만들어 쓴 뒤, 제자리로 끌어다 놓습니다. 끄는 빠르기도 조금씩 다릅니다 */
+  /**
+   * 초안을 먼저 썼다가 한 글자씩 지우고 진짜 글자로 다시 씁니다(예: 'Project'라고 썼다가 '프로젝트'로).
+   * 사람이 문구를 고민하며 바꾸는 모습입니다. 글자 하나하나가 보이도록 배속 상한(SHOW_SPEED)을 둡니다
+   */
+  private async rewriteText(
+    worker: Worker,
+    target: TargetSpec,
+    token: RunToken,
+    alive: () => boolean,
+  ) {
+    const draft = target.draft ?? ''
+    const text = target.text ?? ''
+    const label = labelOf(target)
+    const showDraft = (length: number) =>
+      this.setTarget(target.id, {
+        visible: true,
+        applied: 0,
+        typed: 0,
+        prior: draft.slice(0, length),
+      })
+    worker.overlay.select(target.el, this.ms(240))
+    this.work(target, 'copy', `${label}  ${snippet(draft)}`)
+    await token.sleep(this.ms(100))
+    for (let length = 1; length <= draft.length; length += 1) {
+      if (!alive()) return
+      showDraft(length)
+      await token.sleep(this.show(44))
+    }
+    // 잠깐 멈칫했다가 지웁니다(지우는 손은 쓰는 손보다 빠릅니다)
+    await token.sleep(this.show(300))
+    this.work(target, 'copy', `${label}  ${snippet(draft)} → ${snippet(text)}`)
+    for (let length = draft.length - 1; length >= 0; length -= 1) {
+      if (!alive()) return
+      showDraft(length)
+      await token.sleep(this.show(24))
+    }
+    await token.sleep(this.show(140))
+    if (!alive()) return
+    await this.typeInto(target.id, text.length, 64, token, alive, true)
+  }
+
+  private async writeAside(
+    worker: Worker,
+    target: TargetSpec,
+    perChar: number,
+    token: RunToken,
+    alive: () => boolean,
+  ) {
+    const el = target.el
+    const text = target.text ?? ''
+    const label = labelOf(target)
+    const aside = this.asideOffset(target)
+    const offset = `translate(${aside.dx}px, ${aside.dy}px)`
+    worker.overlay.select(el, this.ms(240))
+    this.work(target, 'copy', `${label}  ${snippet(text)}`)
+    el.style.transform = offset
+    try {
+      await token.sleep(this.ms(120))
+      if (!alive()) return
+      await this.typeInto(target.id, text.length, perChar, token, alive)
+      if (!alive()) return
+      await token.sleep(this.ms(110 + Math.random() * 120))
+      const duration = this.show(440 + Math.random() * 200)
+      el.style.transform = ''
+      const drag = el.animate([{ transform: offset }, { transform: 'none' }], {
+        duration,
+        easing: DRAG_EASING,
+      })
+      this.work(target, 'copy', `${label}  끌어서 제자리에 놓기`)
+      await token.sleep(duration)
+      drag.finish()
+    } finally {
+      el.style.transform = ''
+    }
+  }
+
+  /**
+   * 작게 써 두고 오른쪽 아래 모서리를 끌어 키웁니다(디자인 도구에서 글자 층의 크기를 바꾸듯).
+   * 키우는 동안 크기(W × H)가 함께 바뀌고, transform으로만 키워서 둘레의 배치는 움직이지 않습니다
+   */
+  private async growText(
+    worker: Worker,
+    target: TargetSpec,
+    perChar: number,
+    token: RunToken,
+    alive: () => boolean,
+  ) {
+    const el = target.el
+    const overlay = worker.overlay
+    const label = labelOf(target)
+    const text = target.text ?? ''
+    const style = getComputedStyle(el)
+    const small = Math.min(0.6, Math.max(0.3, 15 / (parseFloat(style.fontSize) || 16)))
+    const align = style.textAlign
+    const origin =
+      align === 'center' ? '50% 0' : align === 'right' || align === 'end' ? '100% 0' : '0 0'
+    el.style.transformOrigin = origin
+    el.style.transform = `scale(${small})`
+    try {
+      overlay.select(el, this.ms(240))
+      this.work(target, 'copy', `${label}  ${snippet(text)}`)
+      await token.sleep(this.ms(120))
+      if (!alive()) return
+      await this.typeInto(target.id, text.length, perChar, token, alive)
+      if (!alive()) return
+      await token.sleep(this.ms(180))
+      overlay.select(el, 0, { badge: true })
+      this.work(target, 'copy', `${label}  모서리를 끌어 키우기`)
+      const duration = this.show(640)
+      el.style.transform = ''
+      const resize = el.animate(
+        [
+          { transformOrigin: origin, transform: `scale(${small})` },
+          { transformOrigin: origin, transform: 'none' },
+        ],
+        { duration, easing: DRAG_EASING },
+      )
+      await token.sleep(duration)
+      resize.finish()
+    } finally {
+      el.style.transform = ''
+      el.style.transformOrigin = ''
+      overlay.select(el, 0)
+    }
+  }
+
+  /**
+   * 머리글 메뉴의 같은 글자를 복사해(⌘C) 제목 자리로 끌어오며 제목 크기로 키우고, 내려놓으면 진짜
+   * 제목으로 바꿔 끼웁니다(굵기·색이 제목 모양으로 바뀜). 그동안 선택 상자 층을 머리글 위로 올려 둡니다.
+   * 사본은 매 프레임 두 자리의 실제 위치 사이를 이어서, 끄는 도중에 스크롤해도 어긋나지 않습니다
+   */
+  private async copyFromMenu(
+    worker: Worker,
+    target: TargetSpec,
+    perChar: number,
+    token: RunToken,
+    alive: () => boolean,
+  ) {
+    const source = this.menuSource(target)
+    if (!source) return this.growText(worker, target, perChar, token, alive)
+    const el = target.el
+    const overlay = worker.overlay
+    const label = labelOf(target)
+    const text = target.text ?? ''
+    let ghost: HTMLElement | null = null
+    this.layer.lift(true)
+    try {
+      // 사용자 의견(너무 느림)으로 잡기·끌기·바꿔 끼우기를 모두 짧게 했습니다(전체 약 0.9~1.3초)
+      overlay.select(source, this.ms(200))
+      overlay.note('⌘C')
+      this.work(target, 'copy', `${label}  메뉴의 ${snippet(text)} 복사`)
+      await token.sleep(this.show(220))
+      if (!alive()) return
+      ghost = this.layer.ghostText(source, text)
+      if (!ghost) {
+        this.setTarget(target.id, DONE)
+        return
+      }
+      this.ghosts.add(ghost)
+      const copy = ghost
+      const start = copy.getBoundingClientRect()
+      const scale =
+        (parseFloat(getComputedStyle(el).fontSize) || 16) / (parseFloat(copy.style.fontSize) || 16)
+      overlay.note(null)
+      overlay.select(copy, 0, { badge: true })
+      await this.tween(this.show(440), token, (t) => {
+        const a = this.glyphRect(source)
+        const b = this.glyphRect(el)
+        const k = easeInOut(t)
+        const s = 1 + (scale - 1) * k
+        const middle = a.top + a.height / 2 + (b.top + b.height / 2 - (a.top + a.height / 2)) * k
+        copy.style.left = `${a.left + (b.left - a.left) * k}px`
+        copy.style.top = `${middle - (start.height * s) / 2}px`
+        copy.style.transform = `scale(${s})`
+        overlay.render(performance.now())
+      })
+      if (!alive()) return
+      this.setTarget(target.id, DONE)
+      overlay.select(el, 0)
+      this.work(target, 'copy', `${label}  ⌘V 붙여넣고 제목 크기로 키우기`)
+      const duration = this.show(160)
+      copy.animate([{ opacity: 1 }, { opacity: 0 }], { duration, fill: 'forwards' })
+      const swap = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration })
+      await token.sleep(duration)
+      swap.finish()
+    } finally {
+      overlay.note(null)
+      overlay.select(el, 0)
+      this.layer.lift(false)
+      if (ghost) {
+        ghost.remove()
+        this.ghosts.delete(ghost)
+      }
+    }
+  }
+
+  // ── 블록 놓기 ───────────────────────────────────────────
+
+  /** 블록 하나를 고른 방법대로 놓습니다 */
+  private async placeBlock(
+    worker: Worker,
+    target: TargetSpec,
+    effect: RevealEffect,
+    token: RunToken,
+    alive: () => boolean,
+  ) {
+    const overlay = worker.overlay
+    const label = labelOf(target)
+    const el = target.el
+    switch (effect) {
+      case 'unroll': {
+        // 틀을 끌어 그리면 그 안에서 내용이 드러납니다(틀째로 펼치기)
+        const fly = overlay.current ? this.ms(220) : 0
+        const grow = this.show(560)
+        this.setTarget(target.id, DONE)
+        const clip = el.animate(
+          [{ clipPath: 'inset(0 100% 100% 0)' }, { clipPath: 'inset(0 0 0 0)' }],
+          { duration: grow, delay: fly, easing: DRAW_EASING, fill: 'backwards' },
+        )
+        this.work(target, worker.role, `${label}  틀째로 끌어 펼치기`)
+        await overlay.draw(el, fly, grow, (ms) => token.sleep(ms))
+        clip.finish()
+        return
+      }
+      case 'paste': {
+        overlay.select(el, this.ms(220))
+        await token.sleep(this.ms(150))
+        if (!alive()) return
+        overlay.note('⌘V')
+        overlay.flash()
+        this.setTarget(target.id, DONE)
+        const pop = el.animate(
+          [
+            { opacity: 0, transform: 'scale(0.985)' },
+            { opacity: 1, transform: 'none' },
+          ],
+          { duration: this.show(240), easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+        )
+        this.work(target, worker.role, `${label}  ⌘V 붙여넣기`)
+        await token.sleep(this.show(460))
+        pop.finish()
+        overlay.note(null)
+        return
+      }
+      case 'stack': {
+        // 목록 항목을 하나씩 집어 차례로 놓습니다. 선택 상자도 항목을 따라 한 칸씩 내려갑니다
+        const items = this.listItems(el)
+        overlay.select(el, this.ms(220))
+        await token.sleep(this.ms(120))
+        if (!alive()) return
+        this.setTarget(target.id, DONE)
+        const step = Math.min(this.show(120), this.show(760) / Math.max(1, items.length))
+        const motions = items.map((item, i) =>
+          item.animate(
+            [
+              { opacity: 0, transform: 'translateX(-14px)' },
+              { opacity: 1, transform: 'none' },
+            ],
+            { duration: this.show(300), delay: i * step, easing: DRAG_EASING, fill: 'backwards' },
+          ),
+        )
+        this.work(target, worker.role, `${label}  항목 ${items.length}개 차례로 놓기`)
+        for (const item of items) {
+          overlay.select(item, this.ms(90))
+          await token.sleep(step)
+          if (!alive()) break
+        }
+        overlay.select(el, this.ms(160))
+        await token.sleep(this.show(240))
+        for (const motion of motions) motion.finish()
+        return
+      }
+      case 'duplicate': {
+        const source = this.duplicateBlock(target)
+        if (source) return this.duplicateInto(worker, target, source, token, alive)
+        return this.carryBlock(worker, target, false, token, alive)
+      }
+      case 'photo':
+        return this.carryBlock(worker, target, true, token, alive)
+      default:
+        return this.carryBlock(worker, target, false, token, alive)
+    }
+  }
+
+  /**
+   * 작업자가 있던 쪽(처음이면 왼쪽 아래)에서 집어 와 제자리에 내려놓습니다. 사진은 작게 집어 와
+   * 틀 왼쪽 위에 맞춘 뒤, 오른쪽 아래 모서리를 끌어 틀에 맞게 키웁니다
+   */
+  private async carryBlock(
+    worker: Worker,
+    target: TargetSpec,
+    photo: boolean,
+    token: RunToken,
+    alive: () => boolean,
+  ) {
+    const overlay = worker.overlay
+    const label = labelOf(target)
+    const from = overlay.current
+    overlay.select(target.el, this.ms(220))
+    await token.sleep(this.ms(100))
+    if (!alive()) return
+    const to = target.el.getBoundingClientRect()
+    let vx = -40
+    let vy = 60
+    if (from) {
+      vx = from.x + from.w / 2 - (to.left + to.width / 2)
+      vy = from.y + from.h / 2 - (to.top + to.height / 2)
+    }
+    const reach = Math.min(1, (photo ? 160 : 120) / (Math.hypot(vx, vy) || 1)) * 0.85
+    const dx = vx * reach
+    const dy = vy * reach
+    this.setTarget(target.id, DONE)
+    if (photo) {
+      const duration = this.show(820)
+      const carry = target.el.animate(
+        [
+          {
+            transformOrigin: '0 0',
+            transform: `translate(${dx}px, ${dy}px) scale(0.42)`,
+            opacity: 0.6,
+            offset: 0,
+            easing: DRAG_EASING,
+          },
+          {
+            transformOrigin: '0 0',
+            transform: 'translate(0px, 0px) scale(0.42)',
+            opacity: 1,
+            offset: 0.5,
+            easing: DRAG_EASING,
+          },
+          { transformOrigin: '0 0', transform: 'none', opacity: 1, offset: 1 },
+        ],
+        { duration },
+      )
+      this.work(target, worker.role, `${label}  끌어와 모서리로 크기 맞춤`)
+      await token.sleep(duration)
+      carry.finish()
+      return
+    }
+    const duration = this.ms(440)
+    const carry = target.el.animate(
+      [
+        { transform: `translate(${dx}px, ${dy}px)`, opacity: 0.35 },
+        { transform: 'none', opacity: 1 },
+      ],
+      { duration, easing: DRAG_EASING },
+    )
+    this.work(target, worker.role, `${label}  옮겨 놓기`)
+    await token.sleep(duration)
+    carry.finish()
+  }
+
+  /**
+   * 바로 위 블록을 복제해(⌥ 드래그) 이 자리로 끌어온 뒤, 내려놓은 사본의 내용을 통째로 새 내용으로
+   * 바꿔 끼웁니다. 사본은 매 프레임 두 자리의 실제 위치 사이를 이어서, 스크롤해도 어긋나지 않습니다
+   */
+  private async duplicateInto(
+    worker: Worker,
+    target: TargetSpec,
+    source: TargetSpec,
+    token: RunToken,
+    alive: () => boolean,
+  ) {
+    const overlay = worker.overlay
+    overlay.select(source.el, this.ms(240))
+    overlay.note('⌥ 복제')
+    await token.sleep(this.show(260))
+    if (!alive()) return
+    const ghost = this.layer.ghost(source.el, true)
+    if (!ghost) {
+      this.setTarget(target.id, DONE)
+      return
+    }
+    this.ghosts.add(ghost)
+    // 본문 글자 모양은 감싸는 틀에서 물려받으므로, 사본에도 같은 글꼴·크기·색을 그대로 붙여 둡니다
+    const style = getComputedStyle(source.el)
+    Object.assign(ghost.style, {
+      fontFamily: style.fontFamily,
+      fontSize: style.fontSize,
+      fontWeight: style.fontWeight,
+      lineHeight: style.lineHeight,
+      letterSpacing: style.letterSpacing,
+      color: style.color,
+    })
+    try {
+      overlay.select(ghost, 0)
+      await this.tween(this.show(620), token, (t) => {
+        const a = source.el.getBoundingClientRect()
+        const b = target.el.getBoundingClientRect()
+        const k = easeInOut(t)
+        ghost.style.left = `${a.left + (b.left - a.left) * k}px`
+        ghost.style.top = `${a.top + (b.top - a.top) * k}px`
+        ghost.style.width = `${a.width + (b.width - a.width) * k}px`
+        ghost.style.height = `${a.height + (b.height - a.height) * k}px`
+        overlay.render(performance.now())
+      })
+      if (!alive()) return
+      overlay.select(target.el, 0)
+      overlay.note('⌘A → ⌘V')
+      overlay.flash()
+      this.setTarget(target.id, DONE)
+      this.work(target, worker.role, `${labelOf(target)}  ⌥ 위 블록 복제 → 내용 바꾸기`)
+      const duration = this.show(320)
+      ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration, fill: 'forwards' })
+      const swap = target.el.animate([{ opacity: 0 }, { opacity: 1 }], { duration })
+      await token.sleep(duration)
+      swap.finish()
+    } finally {
+      overlay.note(null)
+      overlay.select(target.el, 0)
+      ghost.remove()
+      this.ghosts.delete(ghost)
+    }
   }
 
   private afterTask(task: Task) {
@@ -892,7 +1600,11 @@ export class BuildDirector {
           if (!alive()) return
           const rect = target.el.getBoundingClientRect()
           this.setTarget(target.id, { visible: true, applied: 0, typed: 0 })
-          this.work('layout', `${label}  ${Math.round(rect.width)} × ${Math.round(rect.height)}`)
+          this.work(
+            target,
+            'layout',
+            `${label}  ${Math.round(rect.width)} × ${Math.round(rect.height)}`,
+          )
           break
         }
         case 'style': {
@@ -904,7 +1616,7 @@ export class BuildDirector {
             await sleep(this.ms(110))
             if (!alive()) return
             this.setTarget(target.id, { visible: true, applied: i + 1, typed: 0 })
-            this.work('style', `${label}  ${prop}: ${value}`)
+            this.work(target, 'style', `${label}  ${prop}: ${value}`)
             await sleep(this.ms(50))
           }
           overlay.code(null)
@@ -923,106 +1635,29 @@ export class BuildDirector {
             await sleep(this.show(240))
             if (!alive()) return
             this.setTarget(target.id, { ...copied, selected: true })
-            this.work('copy', `${label}  ${snippet(copied.prior, 10)} → ${snippet(text, 10)}`)
+            this.work(
+              target,
+              'copy',
+              `${label}  ${snippet(copied.prior, 10)} → ${snippet(text, 10)}`,
+            )
             await sleep(this.show(340))
             if (!alive()) return
             await this.typeInto(target.id, text.length, perChar, token, alive, true)
             break
           }
-          const aside = this.asideOffset(target)
-          overlay.select(target.el, this.ms(240))
-          this.work('copy', `${label}  ${snippet(text)}`)
-          if (!aside) {
-            await this.typeInto(target.id, text.length, perChar, token, alive)
-            break
-          }
-          // 옆 빈자리에 글상자를 만들어 쓴 뒤, 제자리로 끌어다 놓습니다
-          const offset = `translate(${aside.dx}px, ${aside.dy}px)`
-          target.el.style.transform = offset
-          try {
-            await sleep(this.ms(120))
-            if (!alive()) return
-            await this.typeInto(target.id, text.length, perChar, token, alive)
-            if (!alive()) return
-            await sleep(this.ms(140))
-            const duration = this.show(520)
-            target.el.style.transform = ''
-            const drag = target.el.animate([{ transform: offset }, { transform: 'none' }], {
-              duration,
-              easing: DRAG_EASING,
-            })
-            this.work('copy', `${label}  끌어서 제자리에 놓기`)
-            await sleep(duration)
-            drag.finish()
-          } finally {
-            target.el.style.transform = ''
-          }
+          // 제목·긴 글은 여러 방법 가운데 바로 앞과 다른 방법으로 만듭니다
+          await this.composeText(worker, target, this.textEffect(target), perChar, token, alive)
           break
         }
         case 'reveal': {
-          // 작업자가 있던 쪽(처음이면 왼쪽 아래)에서 집어 와 제자리에 내려놓습니다
-          const from = overlay.current
-          overlay.select(target.el, this.ms(220))
-          await sleep(this.ms(100))
-          if (!alive()) return
-          const photo = target.el.querySelector('img') !== null
-          const to = target.el.getBoundingClientRect()
-          let vx = -40
-          let vy = 60
-          if (from) {
-            vx = from.x + from.w / 2 - (to.left + to.width / 2)
-            vy = from.y + from.h / 2 - (to.top + to.height / 2)
-          }
-          const reach = Math.min(1, (photo ? 160 : 120) / (Math.hypot(vx, vy) || 1)) * 0.85
-          const dx = vx * reach
-          const dy = vy * reach
-          this.setTarget(target.id, DONE)
-          if (photo) {
-            // 사진: 작게 집어 와 틀 왼쪽 위에 맞춘 뒤, 오른쪽 아래 모서리를 끌어 틀에 맞게 키웁니다
-            const duration = this.show(820)
-            const carry = target.el.animate(
-              [
-                {
-                  transformOrigin: '0 0',
-                  transform: `translate(${dx}px, ${dy}px) scale(0.42)`,
-                  opacity: 0.6,
-                  offset: 0,
-                  easing: DRAG_EASING,
-                },
-                {
-                  transformOrigin: '0 0',
-                  transform: 'translate(0px, 0px) scale(0.42)',
-                  opacity: 1,
-                  offset: 0.5,
-                  easing: DRAG_EASING,
-                },
-                { transformOrigin: '0 0', transform: 'none', opacity: 1, offset: 1 },
-              ],
-              { duration },
-            )
-            this.work(worker.role, `${label}  끌어와 모서리로 크기 맞춤`)
-            await sleep(duration)
-            carry.finish()
-          } else {
-            const duration = this.ms(440)
-            const carry = target.el.animate(
-              [
-                { transform: `translate(${dx}px, ${dy}px)`, opacity: 0.35 },
-                { transform: 'none', opacity: 1 },
-              ],
-              { duration, easing: DRAG_EASING },
-            )
-            this.work(worker.role, `${label}  옮겨 놓기`)
-            await sleep(duration)
-            carry.finish()
-          }
+          await this.placeBlock(worker, target, this.revealEffect(target), token, alive)
           break
         }
         case 'custom': {
           overlay.select(target.el, this.ms(240))
           if (!alive()) return
           this.setTarget(target.id, DONE)
-          this.work(worker.role, label)
+          this.work(target, worker.role, label)
           if (target.run) {
             await target.run({
               get hurried() {
@@ -1041,14 +1676,20 @@ export class BuildDirector {
     }
   }
 
-  private async say(text: string, token: RunToken) {
-    await this.typeLine('say', text, token, 16)
+  private async say(text: string, token: RunToken, sectionId?: string) {
+    await this.typeLine('say', text, token, 16, sectionId)
     await token.sleep(this.ms(80))
   }
 
   /** 한 줄을 글자 단위로 찍습니다. 서두르면 남은 글자를 한 번에 채웁니다 */
-  private async typeLine(kind: LineKind, text: string, token: RunToken, charMs: number) {
-    const id = this.pushLine(kind, text)
+  private async typeLine(
+    kind: LineKind,
+    text: string,
+    token: RunToken,
+    charMs: number,
+    sectionId?: string,
+  ) {
+    const id = this.pushLine(kind, text, { sectionId })
     const perChar = this.ms(charMs)
     const step = Math.max(1, Math.ceil(16 / Math.max(0.5, perChar)))
     let typed = 0
@@ -1095,9 +1736,17 @@ export class BuildDirector {
       for (const target of this.targets.values()) {
         if (target.sectionId === id) this.targetState.delete(target.id)
       }
-      if (spec?.commit && !this.committed.has(id)) {
+      // 다 만든 기록. 커밋이 있는 구역은 커밋 메시지로, 없는 구역도 조립을 했으면 '완성'으로 남겨
+      // 터미널이 그 구역의 서브 에이전트 일을 이 한 줄로 접습니다(걸린 시간과 함께)
+      const started = this.startedAt.get(id)
+      if (spec && !this.committed.has(id) && (spec.commit || started !== undefined)) {
         this.committed.add(id)
-        this.pushLine('commit', spec.commit.message, { meta: spec.commit.date, complete: true })
+        this.pushLine('commit', spec.commit?.message ?? `'${spec.label}' 완성`, {
+          meta: spec.commit?.date,
+          complete: true,
+          sectionId: id,
+          took: started === undefined ? undefined : performance.now() - started,
+        })
       }
       this.emit()
     })
@@ -1114,7 +1763,11 @@ export class BuildDirector {
           if (!spec.commit || this.committed.has(spec.id)) continue
           if (this.status.get(spec.id) !== 'done') continue
           this.committed.add(spec.id)
-          this.pushLine('commit', spec.commit.message, { meta: spec.commit.date, complete: true })
+          this.pushLine('commit', spec.commit.message, {
+            meta: spec.commit.date,
+            complete: true,
+            sectionId: spec.id,
+          })
         }
       })
       this.checkFinished()
@@ -1246,14 +1899,21 @@ export class BuildDirector {
     this.emit()
   }
 
-  private work(role: Role, text: string) {
-    this.pushLine('work', text, { role, complete: true })
+  /** 서브 에이전트가 한 일 한 줄. 그 대상이 속한 구역 아래에 접혀 들어갑니다 */
+  private work(target: TargetSpec, role: Role, text: string) {
+    this.pushLine('work', text, { role, complete: true, sectionId: target.sectionId })
   }
 
   private pushLine(
     kind: LineKind,
     text: string,
-    options: { meta?: string; role?: Role; complete?: boolean } = {},
+    options: {
+      meta?: string
+      role?: Role
+      complete?: boolean
+      sectionId?: string
+      took?: number
+    } = {},
   ) {
     this.lineSeq += 1
     const line: TerminalLine = {
@@ -1263,6 +1923,8 @@ export class BuildDirector {
       typed: options.complete ? text.length : 0,
       meta: options.meta,
       role: options.role,
+      sectionId: options.sectionId,
+      took: options.took,
     }
     const next = [...this.lines, line]
     this.lines = next.length > MAX_LINES ? next.slice(-MAX_LINES) : next

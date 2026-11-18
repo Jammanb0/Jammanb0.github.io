@@ -42,7 +42,14 @@ export function HeroSection() {
           <BuildBox id="hero-chip" name=".role-chip" decls={CHIP} as="span" className={styles.chip}>
             <BuildText id="hero-role" as="span" text={profile.role} />
           </BuildBox>
-          <BuildText id="hero-title" as="h1" text={profile.tagline} className={styles.heroTitle} />
+          {/* 페이지마다 큰 제목을 만드는 방법을 다르게 둡니다: 소개는 옆에 써서 끌어 놓기 */}
+          <BuildText
+            id="hero-title"
+            as="h1"
+            text={profile.tagline}
+            compose="aside"
+            className={styles.heroTitle}
+          />
           <BuildText id="hero-intro" text={profile.intro} className={styles.heroIntro} />
           <BuildReveal id="hero-actions" className={styles.heroActions}>
             <Button onClick={scrollToProjects}>프로젝트 보기</Button>

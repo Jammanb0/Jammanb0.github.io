@@ -13,7 +13,7 @@ import { DirectorContext, SectionContext } from './context'
 import { setCurrentDirector } from './current'
 import { BuildDirector } from './director'
 import { useBuildTarget, useDirector, useSectionStatus } from './hooks'
-import type { CommitInfo, Decl, Role } from './types'
+import type { CommitInfo, Decl, Role, TextCompose } from './types'
 import * as styles from './build.css'
 
 const NO_DECLS: readonly Decl[] = []
@@ -161,11 +161,23 @@ interface BuildTextProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
   id: string
   text: string
   as?: TextTag
+  /** 만드는 방법을 정해 둘 때(페이지의 큰 제목 등). 주지 않으면 그때그때 고릅니다 */
+  compose?: TextCompose
+  /** compose가 rewrite일 때 먼저 썼다가 지울 초안 */
+  draft?: string
 }
 
 /** 글자가 한 자씩 입력되는 텍스트. 스크린리더는 처음부터 전체 문장을 읽습니다 */
-export function BuildText({ id, text, as: Tag = 'p', className, ...rest }: BuildTextProps) {
-  const [ref, state] = useBuildTarget({ id, kind: 'text', text })
+export function BuildText({
+  id,
+  text,
+  as: Tag = 'p',
+  compose,
+  draft,
+  className,
+  ...rest
+}: BuildTextProps) {
+  const [ref, state] = useBuildTarget({ id, kind: 'text', text, compose, draft })
   const typed = Math.min(state.typed, text.length)
   const done = typed >= text.length
   // 복제해 온 카드라면 고쳐 쓰기 전까지 원래 카드의 글자가 그대로 보입니다
