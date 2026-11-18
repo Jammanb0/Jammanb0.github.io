@@ -39,7 +39,7 @@ export const story: StoryChapter[] = [
       },
       {
         period: '2026',
-        text: '혼자 기획하고 만든 도구들이 늘었습니다. 대부분 Claude Code와 협업해 개발했고, 그중 두 개는 실제 업무에 쓰고 있습니다.',
+        text: '혼자 기획하고 만든 도구들이 늘었습니다. 실제 업무에 쓰려고 또는 필요해서 만든 것들로, 대부분 Claude Code와 Codex를 사용해 개발했습니다.',
         projectIds: ['swiftfolio-template', 'tailor', 'doltap', 'lesserdam', 'ilsa-work-helper'],
       },
     ],
