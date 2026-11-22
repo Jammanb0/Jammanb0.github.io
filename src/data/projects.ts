@@ -341,6 +341,7 @@ AI가 생성한 결과를 그럴듯해 보인다는 이유만으로 통과시키
     links: [{ label: 'GitHub', url: 'https://github.com/Jammanb0/tailor', icon: 'github' }],
     thumbnail: '/project_thumbnail/Tailor_thumbnail.png',
     date: '2026-08-11',
+    endDate: '2026-11-22',
     featured: true,
   },
   {
